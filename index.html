@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>PiDEX 유틸</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/11.2.2/stellar-sdk.min.js"></script>
+</head>
+<body>
+
+  <!-- 로그인 화면 -->
+  <div id="login-screen" class="screen">
+    <div class="login-box">
+      <h1 class="app-title">PiDEX 유틸</h1>
+      <p class="app-sub">테스트넷 전용</p>
+      <button id="btn-login" class="btn-primary btn-lg">Pi 지갑 연결</button>
+      <p class="login-note">Pi Browser에서 실행해야 합니다</p>
+    </div>
+  </div>
+
+  <!-- 메인 앱 화면 -->
+  <div id="app-screen" class="screen hidden">
+
+    <!-- 상단 헤더 -->
+    <header class="app-header">
+      <span class="header-title">PiDEX 유틸</span>
+      <div class="header-right">
+        <span id="header-sub-badge" class="sub-badge hidden">구독중</span>
+        <span id="header-username" class="header-user">-</span>
+      </div>
+    </header>
+
+    <!-- 페이지 컨테이너 -->
+    <main class="page-container">
+      <div id="page-dashboard" class="page"></div>
+      <div id="page-lp"        class="page hidden"></div>
+      <div id="page-arbitrage" class="page hidden"></div>
+      <div id="page-swap"      class="page hidden"></div>
+      <div id="page-sub"       class="page hidden"></div>
+    </main>
+
+    <!-- 하단 탭 -->
+    <nav class="bottom-nav">
+      <button class="nav-tab active" data-page="dashboard">
+        <span class="nav-icon">💼</span>
+        <span class="nav-label">지갑</span>
+      </button>
+      <button class="nav-tab" data-page="lp">
+        <span class="nav-icon">💧</span>
+        <span class="nav-label">LP 예치</span>
+      </button>
+      <button class="nav-tab" data-page="arbitrage">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-label">차익거래</span>
+      </button>
+      <button class="nav-tab" data-page="swap">
+        <span class="nav-icon">⇄</span>
+        <span class="nav-label">스왑</span>
+      </button>
+      <button class="nav-tab" data-page="sub">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-label">구독</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- 로딩 오버레이 -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p id="loading-msg">처리 중...</p>
+  </div>
+
+  <!-- 토스트 알림 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- JS 모듈 로드 -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

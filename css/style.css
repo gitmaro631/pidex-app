@@ -1,0 +1,179 @@
+/* ── 기본 변수 ── */
+:root {
+  --bg:        #0f1117;
+  --bg2:       #1a1d27;
+  --bg3:       #242736;
+  --border:    #2e3248;
+  --accent:    #7c6af7;
+  --accent2:   #5b8ef5;
+  --green:     #34c77b;
+  --red:       #f05c5c;
+  --yellow:    #f5c542;
+  --text:      #e8eaf0;
+  --text2:     #8b90a8;
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; }
+
+/* ── 화면 전환 ── */
+.screen { min-height: 100vh; }
+.hidden { display: none !important; }
+
+/* ── 로그인 화면 ── */
+.login-box {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; gap: 16px; padding: 32px;
+}
+.app-title  { font-size: 28px; font-weight: 700; color: var(--accent); }
+.app-sub    { font-size: 13px; color: var(--text2); }
+.login-note { font-size: 12px; color: var(--text2); margin-top: 8px; }
+
+/* ── 앱 레이아웃 ── */
+#app-screen { display: flex; flex-direction: column; height: 100vh; }
+
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.header-title { font-weight: 700; font-size: 16px; color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.header-user  { font-size: 13px; color: var(--text2); }
+.sub-badge    { background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+
+.page-container { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+.page { animation: fadeIn .2s ease; }
+
+/* ── 하단 탭 ── */
+.bottom-nav {
+  display: flex; background: var(--bg2); border-top: 1px solid var(--border);
+  position: fixed; bottom: 0; left: 0; right: 0; height: 64px; z-index: 100;
+}
+.nav-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; background: none; border: none; cursor: pointer; color: var(--text2);
+  transition: color .15s;
+}
+.nav-tab.active { color: var(--accent); }
+.nav-icon  { font-size: 20px; }
+.nav-label { font-size: 10px; }
+
+/* ── 공통 카드 ── */
+.card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px;
+}
+.card-title { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+
+/* ── 버튼 ── */
+.btn-primary {
+  background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%;
+  transition: opacity .15s;
+}
+.btn-primary:hover { opacity: .85; }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-outline {
+  background: transparent; color: var(--accent); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 10px 20px; font-size: 14px; cursor: pointer; width: 100%;
+}
+.btn-sm { padding: 8px 16px; font-size: 13px; }
+.btn-lg { padding: 16px 32px; font-size: 16px; }
+.btn-green  { background: var(--green); }
+.btn-danger { background: var(--red); }
+
+/* ── 입력 폼 ── */
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); padding: 10px 12px; font-size: 14px; outline: none;
+}
+.form-input:focus { border-color: var(--accent); }
+select.form-input { appearance: none; }
+
+/* ── 수치 표시 ── */
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--text2); font-size: 13px; }
+.stat-value { font-size: 14px; font-weight: 600; }
+.val-green  { color: var(--green); }
+.val-red    { color: var(--red); }
+.val-yellow { color: var(--yellow); }
+
+/* ── 배지/태그 ── */
+.badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.badge-green  { background: rgba(52,199,123,.15); color: var(--green); }
+.badge-yellow { background: rgba(245,197,66,.15); color: var(--yellow); }
+.badge-gray   { background: var(--bg3); color: var(--text2); }
+
+/* ── 풀 카드 ── */
+.pool-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s;
+}
+.pool-card:hover, .pool-card.selected { border-color: var(--accent); }
+.pool-name  { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.pool-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+.pool-stat  { font-size: 12px; color: var(--text2); }
+.pool-stat span { color: var(--text); font-weight: 500; }
+
+/* ── 차익거래 경로 ── */
+.arb-path {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s;
+}
+.arb-path:hover, .arb-path.selected { border-color: var(--green); }
+.arb-route { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+.arb-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.arb-stat  { font-size: 12px; }
+.arb-stat-label { color: var(--text2); }
+.arb-profit-big { font-size: 20px; font-weight: 700; text-align: right; }
+
+/* ── 스왑 박스 ── */
+.swap-box {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px;
+}
+.swap-arrow { text-align: center; font-size: 22px; padding: 4px 0; color: var(--text2); }
+
+/* ── 구독 카드 ── */
+.sub-plan {
+  border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer;
+}
+.sub-plan.active { border-color: var(--accent); background: rgba(124,106,247,.08); }
+.sub-plan-price { font-size: 28px; font-weight: 700; color: var(--accent); margin: 8px 0; }
+
+/* ── 탭 필터 버튼 ── */
+.filter-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-tab {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 20px;
+  padding: 6px 14px; font-size: 12px; color: var(--text2); cursor: pointer;
+}
+.filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── 로딩 오버레이 ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite;
+}
+
+/* ── 토스트 ── */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 20px; font-size: 13px; z-index: 1000; white-space: nowrap;
+  animation: fadeIn .2s ease;
+}
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error   { border-color: var(--red);   color: var(--red); }
+
+/* ── 애니메이션 ── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
