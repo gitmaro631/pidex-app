@@ -82,7 +82,7 @@ export async function renderDashboard(container) {
 
     const topLiq = [...pools].sort((a, b) =>
       Math.min(b.reserveA, b.reserveB) - Math.min(a.reserveA, a.reserveB)
-    ).slice(0, 3);
+    ).slice(0, 10);
 
     container.querySelector('.page-content').innerHTML = `
       <h2 class="page-title">PiDEX 현황 <span class="en">Network Overview</span></h2>
