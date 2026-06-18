@@ -1,8 +1,7 @@
 import { setWalletTabVisible, showToast } from './app.js';
 
-const YOUTUBE_URL     = 'https://youtube.com/@hiddenstrokes-j5w';
-const YOUTUBE_INTENT  = 'intent://www.youtube.com/@hiddenstrokes-j5w#Intent;package=com.google.android.youtube;scheme=https;end';
-const YOUTUBE_VND     = 'vnd.youtube://user/hiddenstrokes-j5w';
+const YOUTUBE_URL    = 'https://youtube.com/@hiddenstrokes-j5w';
+const YOUTUBE_INTENT = 'intent://www.youtube.com/@hiddenstrokes-j5w#Intent;package=com.google.android.youtube;scheme=https;end';
 const PUB_KEY_STORAGE = 'stellar_pub_key';
 
 export function renderSubscription(container) {
@@ -94,17 +93,7 @@ export function renderSubscription(container) {
 
   container.querySelector('#yt-link').addEventListener('click', e => {
     e.preventDefault();
-    const tryOpen = (href) => {
-      const a = document.createElement('a');
-      a.href = href;
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-    tryOpen(YOUTUBE_VND);
-    setTimeout(() => tryOpen(YOUTUBE_INTENT), 300);
-    setTimeout(() => tryOpen(YOUTUBE_URL), 1000);
+    window.open(YOUTUBE_URL, '_blank', 'noopener,noreferrer');
   });
 
   if (savedKey) {
