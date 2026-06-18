@@ -1,4 +1,4 @@
-import { fetchPools, fetchRecommendedFee, fetchTradeStats } from './horizon.js';
+import { fetchPools, fetchRecommendedFee } from './horizon.js';
 import { formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading } from './app.js';
 
@@ -107,11 +107,6 @@ export async function renderDashboard(container) {
         </div>
       </div>
 
-      <div class="dash-section-title">거래 현황 <span class="en">Trading Activity</span></div>
-      <div id="trade-stats-block">
-        <div class="card" style="text-align:center;color:var(--text2);font-size:13px;padding:16px;">거래 데이터 로드 중... Loading trades...</div>
-      </div>
-
       <div class="dash-section-title">유동성 <span class="en">Liquidity</span></div>
       <div class="dash-grid dash-grid-2">
         <div class="dash-stat-card">
@@ -136,28 +131,6 @@ export async function renderDashboard(container) {
       <p class="dash-updated">데이터 기준 시각: ${new Date().toLocaleTimeString()} <span class="en">as of</span></p>
     `;
 
-    // 거래 현황 별도 로드
-    fetchTradeStats().then(tradeStats => {
-      const block = container.querySelector('#trade-stats-block');
-      if (!block) return;
-      const countStr = tradeStats.capped
-        ? `${(10000).toLocaleString()}+`
-        : tradeStats.count.toLocaleString();
-      block.innerHTML = `
-        <div class="dash-grid dash-grid-2">
-          <div class="dash-stat-card">
-            <div class="dash-stat-val">${countStr}</div>
-            <div class="dash-stat-label">오늘 거래 건수 <span class="en">Today Trades</span></div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="dash-stat-val">${formatLargeNum(tradeStats.volume)}</div>
-            <div class="dash-stat-label">오늘 Pi 거래량 <span class="en">Today Volume</span></div>
-          </div>
-        </div>`;
-    }).catch(() => {
-      const block = container.querySelector('#trade-stats-block');
-      if (block) block.innerHTML = `<div class="card"><p class="empty-msg">거래 데이터 조회 실패</p></div>`;
-    });
 
   } catch (e) {
     container.querySelector('.page-content').innerHTML = `
