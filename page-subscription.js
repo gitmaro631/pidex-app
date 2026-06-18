@@ -35,6 +35,13 @@ export function renderSubscription(container) {
               <div class="info-desc">유동성 풀 예치 비율을 사전에 계산하고 풀 통계를 비교합니다.</div>
             </div>
           </div>
+          <div class="info-item">
+            <span class="info-icon">↓</span>
+            <div>
+              <div class="info-label">새로고침 <span class="en">Pull to Refresh</span></div>
+              <div class="info-desc">각 탭 화면 최상단에서 아래로 드래그하면 데이터가 새로고침됩니다.<br><span class="en">Pull down from the top of any tab to refresh data.</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
