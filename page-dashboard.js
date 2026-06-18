@@ -1,4 +1,4 @@
-import { fetchPools, fetchRecommendedFee } from './horizon.js';
+import { fetchPools, fetchRecommendedFee, fetchTradeStats } from './horizon.js';
 import { formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading } from './app.js';
 
@@ -67,7 +67,7 @@ export async function renderDashboard(container) {
 
   try {
     showLoading('PiDEX 데이터 로드 중...');
-    const [pools, gasFee] = await Promise.all([fetchPools(), fetchRecommendedFee()]);
+    const [pools, gasFee, tradeStats] = await Promise.all([fetchPools(), fetchRecommendedFee(), fetchTradeStats()]);
     hideLoading();
 
     const piPools     = pools.filter(p => p.assetAId === 'Pi' || p.assetBId === 'Pi');
@@ -104,6 +104,26 @@ export async function renderDashboard(container) {
         <div class="dash-stat-card">
           <div class="dash-stat-val">${avgFee}%</div>
           <div class="dash-stat-label">평균 수수료 <span class="en">Avg Fee</span></div>
+        </div>
+      </div>
+
+      <div class="dash-section-title">거래 현황 <span class="en">Trading Activity</span></div>
+      <div class="dash-grid">
+        <div class="dash-stat-card">
+          <div class="dash-stat-val">${tradeStats.todayCount.toLocaleString()}</div>
+          <div class="dash-stat-label">오늘 거래 건수 <span class="en">Today Trades</span></div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-val">${formatLargeNum(tradeStats.todayVolume)}</div>
+          <div class="dash-stat-label">오늘 Pi 거래량 <span class="en">Today Volume</span></div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-val">${tradeStats.weeklyAvgCount.toLocaleString()}</div>
+          <div class="dash-stat-label">일평균 거래 건수 <span class="en">7d Avg Trades</span></div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-val">${formatLargeNum(tradeStats.weeklyAvgVolume)}</div>
+          <div class="dash-stat-label">일평균 Pi 거래량 <span class="en">7d Avg Volume</span></div>
         </div>
       </div>
 

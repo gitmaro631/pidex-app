@@ -51,6 +51,54 @@ function parsePool(p) {
   };
 }
 
+export async function fetchTradeStats() {
+  const now      = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const weekAgo  = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+  const dailyCount  = {};
+  const dailyVolume = {};
+  let url  = `${HORIZON}/trades?limit=200&order=desc`;
+  let done = false;
+  let fetched = 0;
+
+  while (url && !done && fetched < 2000) {
+    const res     = await fetch(url);
+    const data    = await res.json();
+    const records = data._embedded?.records ?? [];
+    if (records.length === 0) break;
+
+    for (const t of records) {
+      const d = new Date(t.ledger_close_time);
+      if (d < weekAgo) { done = true; break; }
+      const key = t.ledger_close_time.slice(0, 10);
+      dailyCount[key]  = (dailyCount[key]  || 0) + 1;
+      let pi = 0;
+      if (t.base_asset_type    === 'native') pi += parseFloat(t.base_amount    || 0);
+      if (t.counter_asset_type === 'native') pi += parseFloat(t.counter_amount || 0);
+      dailyVolume[key] = (dailyVolume[key] || 0) + pi;
+    }
+
+    fetched += records.length;
+    const next = data._links?.next?.href;
+    if (!next || records.length === 0) break;
+    url = next;
+  }
+
+  const days         = Object.keys(dailyCount);
+  const totalCount   = days.reduce((s, k) => s + dailyCount[k],  0);
+  const totalVolume  = days.reduce((s, k) => s + dailyVolume[k], 0);
+  const avgCount     = days.length ? Math.round(totalCount  / days.length) : 0;
+  const avgVolume    = days.length ? Math.round(totalVolume / days.length) : 0;
+
+  return {
+    todayCount:  dailyCount[todayStr]  || 0,
+    todayVolume: dailyVolume[todayStr] || 0,
+    weeklyAvgCount:  avgCount,
+    weeklyAvgVolume: avgVolume,
+  };
+}
+
 export async function fetchPoolById(poolId) {
   const p = await get(`/liquidity_pools/${poolId}`);
   return parsePool(p);
