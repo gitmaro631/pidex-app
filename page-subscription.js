@@ -103,14 +103,26 @@ export function renderSubscription(container) {
             <span class="yt-sub">youtube.com/@hiddenstrokes-j5w</span>
           </span>
         </div>
-        <p class="contact-desc" style="margin-top:8px;font-size:11px;">
-          위 주소를 유튜브에서 직접 검색해주세요.<br>
-          <span class="en">Search the channel URL directly in YouTube.</span>
+        <div class="copy-url-row">
+          <span class="copy-url-text" id="yt-url-text">youtube.com/@hiddenstrokes-j5w</span>
+          <button class="btn-outline btn-sm" id="btn-copy-yt" style="width:auto;white-space:nowrap;">복사 Copy</button>
+        </div>
+        <p class="contact-desc" style="margin-top:6px;font-size:11px;">
+          위 주소를 복사 후 유튜브에서 검색해주세요.<br>
+          <span class="en">Copy the URL and search in YouTube.</span>
         </p>
       </div>
     </div>
   `;
 
+
+  container.querySelector('#btn-copy-yt').addEventListener('click', () => {
+    navigator.clipboard.writeText('youtube.com/@hiddenstrokes-j5w').then(() => {
+      const btn = container.querySelector('#btn-copy-yt');
+      btn.textContent = '복사됨 Copied!';
+      setTimeout(() => { btn.textContent = '복사 Copy'; }, 2000);
+    });
+  });
 
   if (savedKey) {
     container.querySelector('#btn-remove-pubkey').addEventListener('click', () => {
