@@ -53,21 +53,20 @@ function parsePool(p) {
 
 export async function fetchTradeStats() {
   const now = new Date();
-  const cutoffs = {
-    day:     new Date(now - 1  * 24 * 60 * 60 * 1000),
-    week:    new Date(now - 7  * 24 * 60 * 60 * 1000),
-    month:   new Date(now - 30 * 24 * 60 * 60 * 1000),
-    quarter: new Date(now - 90 * 24 * 60 * 60 * 1000),
-  };
+  const toDateKey = d => d.toISOString().slice(0, 10);
+  const todayKey  = toDateKey(now);
+  const yestKey   = toDateKey(new Date(now - 1 * 24 * 60 * 60 * 1000));
+  const d2Key     = toDateKey(new Date(now - 2 * 24 * 60 * 60 * 1000));
+  const cutoff    = new Date(now - 3 * 24 * 60 * 60 * 1000);
 
-  const counts  = { day: 0, week: 0, month: 0, quarter: 0 };
-  const volumes = { day: 0, week: 0, month: 0, quarter: 0 };
+  const counts  = { today: 0, yesterday: 0, dayBefore: 0 };
+  const volumes = { today: 0, yesterday: 0, dayBefore: 0 };
 
   let url     = `${HORIZON}/trades?limit=200&order=desc`;
   let done    = false;
   let fetched = 0;
 
-  while (url && !done && fetched < 50000) {
+  while (url && !done && fetched < 20000) {
     const res     = await fetch(url);
     const data    = await res.json();
     const records = data._embedded?.records ?? [];
@@ -75,16 +74,16 @@ export async function fetchTradeStats() {
 
     for (const t of records) {
       const d = new Date(t.ledger_close_time);
-      if (d < cutoffs.quarter) { done = true; break; }
+      if (d < cutoff) { done = true; break; }
 
+      const key = toDateKey(d);
       let pi = 0;
       if (t.base_asset_type    === 'native') pi += parseFloat(t.base_amount    || 0);
       if (t.counter_asset_type === 'native') pi += parseFloat(t.counter_amount || 0);
 
-      if (d >= cutoffs.day)   { counts.day++;     volumes.day     += pi; }
-      if (d >= cutoffs.week)  { counts.week++;    volumes.week    += pi; }
-      if (d >= cutoffs.month) { counts.month++;   volumes.month   += pi; }
-      counts.quarter++;  volumes.quarter += pi;
+      if (key === todayKey) { counts.today++;     volumes.today     += pi; }
+      else if (key === yestKey) { counts.yesterday++; volumes.yesterday += pi; }
+      else if (key === d2Key)   { counts.dayBefore++; volumes.dayBefore += pi; }
     }
 
     fetched += records.length;
@@ -93,7 +92,7 @@ export async function fetchTradeStats() {
     url = next;
   }
 
-  return { counts, volumes };
+  return { counts, volumes, keys: { todayKey, yestKey, d2Key } };
 }
 
 export async function fetchPoolById(poolId) {

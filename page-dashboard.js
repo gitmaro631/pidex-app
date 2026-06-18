@@ -110,18 +110,17 @@ export async function renderDashboard(container) {
       <div class="dash-section-title">거래 현황 <span class="en">Trading Activity</span></div>
       <div class="card dash-trade-table">
         <div class="trade-row trade-header">
-          <span>기간 <span class="en">Period</span></span>
+          <span>날짜 <span class="en">Date</span></span>
           <span>거래 건수 <span class="en">Trades</span></span>
           <span>Pi 거래량 <span class="en">Volume</span></span>
         </div>
         ${[
-          { label: '오늘 Today',     k: 'day'     },
-          { label: '7일 Week',       k: 'week'    },
-          { label: '1개월 Month',    k: 'month'   },
-          { label: '3개월 Quarter',  k: 'quarter' },
+          { label: '오늘 Today',     k: 'today',     date: tradeStats.keys.todayKey },
+          { label: '어제 Yesterday', k: 'yesterday', date: tradeStats.keys.yestKey  },
+          { label: '그저께 D-2',     k: 'dayBefore', date: tradeStats.keys.d2Key    },
         ].map(r => `
           <div class="trade-row">
-            <span class="trade-period">${r.label}</span>
+            <span class="trade-period">${r.label}<br><span class="trade-date">${r.date}</span></span>
             <span>${tradeStats.counts[r.k].toLocaleString()}</span>
             <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
           </div>`).join('')}
