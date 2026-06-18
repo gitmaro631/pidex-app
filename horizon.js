@@ -66,7 +66,7 @@ export async function fetchTradeStats() {
   let done    = false;
   let fetched = 0;
 
-  while (url && !done && fetched < 20000) {
+  while (url && !done && fetched < 3000) {
     const res     = await fetch(url);
     const data    = await res.json();
     const records = data._embedded?.records ?? [];

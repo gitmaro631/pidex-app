@@ -81,9 +81,6 @@ async function init() {
   });
 
   document.getElementById('btn-login').addEventListener('click', doLogin);
-
-  // 앱 시작 시 자동 인증 시도
-  await doLogin();
 }
 
 document.addEventListener('visibilitychange', () => {

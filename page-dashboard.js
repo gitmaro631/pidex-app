@@ -67,7 +67,7 @@ export async function renderDashboard(container) {
 
   try {
     showLoading('PiDEX 데이터 로드 중...');
-    const [pools, gasFee, tradeStats] = await Promise.all([fetchPools(), fetchRecommendedFee(), fetchTradeStats()]);
+    const [pools, gasFee] = await Promise.all([fetchPools(), fetchRecommendedFee()]);
     hideLoading();
 
     const piPools     = pools.filter(p => p.assetAId === 'Pi' || p.assetBId === 'Pi');
@@ -108,21 +108,8 @@ export async function renderDashboard(container) {
       </div>
 
       <div class="dash-section-title">거래 현황 <span class="en">Trading Activity</span></div>
-      <div class="card dash-trade-table">
-        <div class="trade-row trade-header">
-          <span>날짜 <span class="en">Date</span></span>
-          <span>거래 건수 <span class="en">Trades</span></span>
-          <span>Pi 거래량 <span class="en">Volume</span></span>
-        </div>
-        ${[
-          { label: '오늘 Today',     k: 'today'     },
-          { label: '어제 Yesterday', k: 'yesterday' },
-        ].map(r => `
-          <div class="trade-row">
-            <span class="trade-period">${r.label}</span>
-            <span>${tradeStats.counts[r.k].toLocaleString()}</span>
-            <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
-          </div>`).join('')}
+      <div id="trade-stats-block">
+        <div class="card" style="text-align:center;color:var(--text2);font-size:13px;padding:16px;">거래 데이터 로드 중... Loading trades...</div>
       </div>
 
       <div class="dash-section-title">유동성 <span class="en">Liquidity</span></div>
@@ -148,6 +135,33 @@ export async function renderDashboard(container) {
 
       <p class="dash-updated">데이터 기준 시각: ${new Date().toLocaleTimeString()} <span class="en">as of</span></p>
     `;
+
+    // 거래 현황 별도 로드
+    fetchTradeStats().then(tradeStats => {
+      const block = container.querySelector('#trade-stats-block');
+      if (!block) return;
+      block.innerHTML = `
+        <div class="card dash-trade-table">
+          <div class="trade-row trade-header">
+            <span>기간 <span class="en">Period</span></span>
+            <span>거래 건수 <span class="en">Trades</span></span>
+            <span>Pi 거래량 <span class="en">Volume</span></span>
+          </div>
+          ${[
+            { label: '오늘 Today',     k: 'today'     },
+            { label: '어제 Yesterday', k: 'yesterday' },
+          ].map(r => `
+            <div class="trade-row">
+              <span class="trade-period">${r.label}</span>
+              <span>${tradeStats.counts[r.k].toLocaleString()}</span>
+              <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
+            </div>`).join('')}
+        </div>`;
+    }).catch(() => {
+      const block = container.querySelector('#trade-stats-block');
+      if (block) block.innerHTML = `<div class="card"><p class="empty-msg">거래 데이터 조회 실패</p></div>`;
+    });
+
   } catch (e) {
     container.querySelector('.page-content').innerHTML = `
       <h2 class="page-title">PiDEX 현황 <span class="en">Network Overview</span></h2>
