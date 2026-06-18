@@ -103,7 +103,7 @@ export async function renderDashboard(container) {
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${avgFee}%</div>
-          <div class="dash-stat-label">평균 수수료 <span class="en">Avg Fee</span></div>
+          <div class="dash-stat-label">AMM 수수료 <span class="en">Avg AMM Fee</span></div>
         </div>
       </div>
 
