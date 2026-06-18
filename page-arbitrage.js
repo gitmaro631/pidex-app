@@ -67,7 +67,7 @@ function updateQuota(container) {
     const remaining = remainingFreeUses();
     const canUse    = remaining > 0;
     quotaEl.innerHTML = `<span class="${canUse ? 'quota-ok' : 'quota-over'}">
-      오늘 남은 탐색 횟수 Daily remaining: ${remaining} / 30
+      오늘 남은 탐색 횟수 Daily remaining: ${remaining} / 100
       ${!canUse ? ' — 내일 초기화됩니다 Resets tomorrow' : ''}
     </span>`;
     scanBtn.disabled = !canUse;
@@ -76,7 +76,7 @@ function updateQuota(container) {
 
 async function runScan(container) {
   if (!canUseArbitrage()) {
-    showToast('오늘 탐색 횟수(30회)를 모두 사용했습니다. 내일 초기화됩니다.', 'error');
+    showToast('오늘 탐색 횟수(100회)를 모두 사용했습니다. 내일 초기화됩니다.', 'error');
     return;
   }
   const inputAmt     = parseFloat(container.querySelector('#arb-input').value)     || 10;
