@@ -1,7 +1,8 @@
 import { setWalletTabVisible, showToast } from './app.js';
 
-const YOUTUBE_URL     = 'https://youtube.com/@hiddenstrokes-j5w?si=O-jzuebnK-vNSVCq';
-const YOUTUBE_INTENT  = 'intent://www.youtube.com/@hiddenstrokes-j5w?si=O-jzuebnK-vNSVCq#Intent;package=com.google.android.youtube;scheme=https;end';
+const YOUTUBE_URL     = 'https://youtube.com/@hiddenstrokes-j5w';
+const YOUTUBE_INTENT  = 'intent://www.youtube.com/@hiddenstrokes-j5w#Intent;package=com.google.android.youtube;scheme=https;end';
+const YOUTUBE_VND     = 'vnd.youtube://user/hiddenstrokes-j5w';
 const PUB_KEY_STORAGE = 'stellar_pub_key';
 
 export function renderSubscription(container) {
@@ -93,8 +94,17 @@ export function renderSubscription(container) {
 
   container.querySelector('#yt-link').addEventListener('click', e => {
     e.preventDefault();
-    window.location.href = YOUTUBE_INTENT;
-    setTimeout(() => { window.open(YOUTUBE_URL, '_blank', 'noopener,noreferrer'); }, 1500);
+    const tryOpen = (href) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    tryOpen(YOUTUBE_VND);
+    setTimeout(() => tryOpen(YOUTUBE_INTENT), 300);
+    setTimeout(() => tryOpen(YOUTUBE_URL), 1000);
   });
 
   if (savedKey) {
