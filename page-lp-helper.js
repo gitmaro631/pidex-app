@@ -93,9 +93,9 @@ export async function renderLPHelper(container) {
 }
 
 const FILTER_HINTS = {
-  volume:    '거래 횟수 기준 정렬 — 수수료 수입 기회가 많은 풀',
+  volume:    '거래 건수 → 총 예치 지분 순 정렬 — 활발하게 이용되는 풀',
   liquidity: '양쪽 중 작은 쪽 잔고 기준 — 병목 유동성이 높은 풀',
-  fee:       '수수료율 × 거래수 기준 — 누적 수수료 수입이 높은 풀',
+  fee:       '수수료율 × 거래수 → 수수료율 순 정렬 — 수수료 수입이 기대되는 풀',
 };
 
 function sortedPools() {
@@ -120,11 +120,11 @@ function sortedPools() {
 
   const liq = p => Math.min(p.reserveA, p.reserveB);
   if (currentFilter === 'volume')
-    return pools.sort((a, b) => (b.tradeCount - a.tradeCount) || (liq(b) - liq(a)));
+    return pools.sort((a, b) => (b.tradeCount - a.tradeCount) || (b.totalShares - a.totalShares) || (liq(b) - liq(a)));
   if (currentFilter === 'liquidity')
     return pools.sort((a, b) => liq(b) - liq(a));
   if (currentFilter === 'fee')
-    return pools.sort((a, b) => ((b.fee_bp * b.tradeCount) - (a.fee_bp * a.tradeCount)) || (liq(b) - liq(a)));
+    return pools.sort((a, b) => ((b.fee_bp * b.tradeCount) - (a.fee_bp * a.tradeCount)) || (b.fee_bp - a.fee_bp) || (liq(b) - liq(a)));
   return pools;
 }
 
