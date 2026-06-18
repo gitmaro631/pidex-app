@@ -93,8 +93,14 @@ export function renderSubscription(container) {
 
   container.querySelector('#yt-link').addEventListener('click', e => {
     e.preventDefault();
-    try { window.location.href = YOUTUBE_INTENT; }
-    catch { window.open(YOUTUBE_URL, '_blank', 'noopener,noreferrer'); }
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = YOUTUBE_INTENT;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      window.open(YOUTUBE_URL, '_blank', 'noopener,noreferrer');
+    }, 500);
   });
 
   if (savedKey) {
