@@ -143,7 +143,9 @@ select.form-input { appearance: none; }
 .swap-box {
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px;
 }
-.swap-arrow { text-align: center; font-size: 22px; padding: 4px 0; color: var(--text2); }
+.swap-arrow       { text-align: center; font-size: 22px; padding: 4px 0; color: var(--text2); }
+.swap-divider     { border-top: 1px dashed var(--border); margin: 8px 0; }
+.split-result-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
 
 /* ── 구독 카드 ── */
 .sub-plan {
