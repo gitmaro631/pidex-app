@@ -16,6 +16,7 @@ export function renderSubscription(container) {
           { icon: '🔄', ko: '차익 탐색',    en: 'Arbitrage Finder', desc_ko: '삼각차익 경로를 스캔하고 순 수익률을 시뮬레이션합니다. 무료 100회/일.',        desc_en: 'Scan arbitrage paths and simulate net return. Free 100×/day.' },
           { icon: '⇄',  ko: '스왑 시뮬레이터', en: 'Swap Simulator',   desc_ko: '예상 수령량·환율·수수료·가격충격을 미리 계산합니다.',                      desc_en: 'Preview receive amount, rate, fee and price impact.' },
           { icon: '💧', ko: 'LP 계산기',    en: 'LP Calculator',    desc_ko: '유동성 풀 예치 비율을 사전에 계산하고 풀 통계를 비교합니다.',                   desc_en: 'Calculate deposit ratios and compare pool statistics.' },
+          { icon: '👛', ko: '지갑',         en: 'Wallet',           desc_ko: '공개주소(G...)를 등록하면 Pi 잔액·토큰·LP 예치 현황을 조회할 수 있습니다.',  desc_en: 'Register your public key to view Pi balance, tokens and LP positions.' },
           { icon: '↓',  ko: '새로고침',     en: 'Pull to Refresh',  desc_ko: '각 탭 최상단에서 아래로 드래그하면 데이터가 새로고침됩니다.',                   desc_en: 'Pull down from the top of any tab to refresh.' },
         ].map(f => `
           <div class="about-row">
