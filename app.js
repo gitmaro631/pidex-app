@@ -52,6 +52,27 @@ function switchPage(pageKey) {
   PAGE_RENDERERS[pageKey]?.(pageEl);
 }
 
+async function doLogin() {
+  showLoading('Pi 지갑 연결 중...');
+  try {
+    const auth = await authenticate();
+    document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
+
+    const { isSubscribed } = await import('./util-storage.js');
+    if (isSubscribed()) document.getElementById('header-sub-badge').classList.remove('hidden');
+
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    hideLoading();
+    if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
+    switchPage('dashboard');
+  } catch (e) {
+    hideLoading();
+    showToast('로그인 실패. Pi Browser에서 실행해주세요.', 'error');
+    console.error(e);
+  }
+}
+
 async function init() {
   initPiSDK();
 
@@ -59,33 +80,15 @@ async function init() {
     btn.addEventListener('click', () => switchPage(btn.dataset.page));
   });
 
-  document.getElementById('btn-login').addEventListener('click', async () => {
-    showLoading('Pi 지갑 연결 중...');
-    try {
-      const auth = await authenticate();
-      document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
+  document.getElementById('btn-login').addEventListener('click', doLogin);
 
-      const { isSubscribed } = await import('./util-storage.js');
-      if (isSubscribed()) document.getElementById('header-sub-badge').classList.remove('hidden');
-
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('app-screen').classList.remove('hidden');
-      hideLoading();
-      if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
-      switchPage('dashboard');
-    } catch (e) {
-      hideLoading();
-      showToast('로그인 실패. Pi Browser에서 실행해주세요.', 'error');
-      console.error(e);
-    }
-  });
+  // 앱 시작 시 자동 인증 시도
+  await doLogin();
 }
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     hideLoading();
-    document.getElementById('app-screen').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
   }
 });
 

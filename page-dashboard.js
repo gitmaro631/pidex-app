@@ -115,12 +115,12 @@ export async function renderDashboard(container) {
           <span>Pi 거래량 <span class="en">Volume</span></span>
         </div>
         ${[
-          { label: '오늘 Today',     k: 'today',     date: tradeStats.keys.todayKey },
-          { label: '어제 Yesterday', k: 'yesterday', date: tradeStats.keys.yestKey  },
-          { label: '그저께 D-2',     k: 'dayBefore', date: tradeStats.keys.d2Key    },
+          { label: '오늘 Today',     k: 'today'     },
+          { label: '어제 Yesterday', k: 'yesterday' },
+          { label: '그저께 D-2',     k: 'dayBefore' },
         ].map(r => `
           <div class="trade-row">
-            <span class="trade-period">${r.label}<br><span class="trade-date">${r.date}</span></span>
+            <span class="trade-period">${r.label}</span>
             <span>${tradeStats.counts[r.k].toLocaleString()}</span>
             <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
           </div>`).join('')}
