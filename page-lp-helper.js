@@ -108,6 +108,14 @@ function sortedPools() {
     pools = pools.filter(p =>
       p.assetA.toUpperCase().includes(q) || p.assetB.toUpperCase().includes(q)
     );
+    // 검색어가 앞쪽에 있을수록 우선 정렬
+    const matchScore = p => {
+      const a = p.assetA.toUpperCase().indexOf(q);
+      const b = p.assetB.toUpperCase().indexOf(q);
+      const best = [a, b].filter(i => i >= 0);
+      return best.length ? Math.min(...best) : 999;
+    };
+    pools.sort((a, b) => matchScore(a) - matchScore(b));
   }
 
   const liq = p => Math.min(p.reserveA, p.reserveB);
