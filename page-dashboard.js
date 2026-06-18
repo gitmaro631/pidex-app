@@ -140,22 +140,19 @@ export async function renderDashboard(container) {
     fetchTradeStats().then(tradeStats => {
       const block = container.querySelector('#trade-stats-block');
       if (!block) return;
+      const countStr = tradeStats.capped
+        ? `${(10000).toLocaleString()}+`
+        : tradeStats.count.toLocaleString();
       block.innerHTML = `
-        <div class="card dash-trade-table">
-          <div class="trade-row trade-header">
-            <span>기간 <span class="en">Period</span></span>
-            <span>거래 건수 <span class="en">Trades</span></span>
-            <span>Pi 거래량 <span class="en">Volume</span></span>
+        <div class="dash-grid dash-grid-2">
+          <div class="dash-stat-card">
+            <div class="dash-stat-val">${countStr}</div>
+            <div class="dash-stat-label">오늘 거래 건수 <span class="en">Today Trades</span></div>
           </div>
-          ${[
-            { label: '오늘 Today',     k: 'today'     },
-            { label: '어제 Yesterday', k: 'yesterday' },
-          ].map(r => `
-            <div class="trade-row">
-              <span class="trade-period">${r.label}</span>
-              <span>${tradeStats.counts[r.k].toLocaleString()}</span>
-              <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
-            </div>`).join('')}
+          <div class="dash-stat-card">
+            <div class="dash-stat-val">${formatLargeNum(tradeStats.volume)}</div>
+            <div class="dash-stat-label">오늘 Pi 거래량 <span class="en">Today Volume</span></div>
+          </div>
         </div>`;
     }).catch(() => {
       const block = container.querySelector('#trade-stats-block');

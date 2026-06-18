@@ -51,40 +51,33 @@ function parsePool(p) {
   };
 }
 
-export async function fetchTradeStats() {
-  const now = new Date();
-  const toDateKey = d => d.toISOString().slice(0, 10);
-  const todayKey  = toDateKey(now);
-  const yestKey   = toDateKey(new Date(now - 1 * 24 * 60 * 60 * 1000));
-  const d2Key     = toDateKey(new Date(now - 2 * 24 * 60 * 60 * 1000));
-  const cutoff    = new Date(now - 3 * 24 * 60 * 60 * 1000);
+const TRADE_CAP = 10000;
 
-  const counts  = { today: 0, yesterday: 0, dayBefore: 0 };
-  const volumes = { today: 0, yesterday: 0, dayBefore: 0 };
+export async function fetchTradeStats() {
+  const now      = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+
+  let count   = 0;
+  let volume  = 0;
+  let capped  = false;
 
   let url     = `${HORIZON}/trades?limit=200&order=desc`;
-  let done    = false;
   let fetched = 0;
 
-  while (url && !done && fetched < 3000) {
+  while (url && fetched < TRADE_CAP) {
     const res     = await fetch(url);
     const data    = await res.json();
     const records = data._embedded?.records ?? [];
     if (records.length === 0) break;
 
+    let hitYesterday = false;
     for (const t of records) {
-      const d = new Date(t.ledger_close_time);
-      if (d < cutoff) { done = true; break; }
-
-      const key = toDateKey(d);
-      let pi = 0;
-      if (t.base_asset_type    === 'native') pi += parseFloat(t.base_amount    || 0);
-      if (t.counter_asset_type === 'native') pi += parseFloat(t.counter_amount || 0);
-
-      if (key === todayKey) { counts.today++;     volumes.today     += pi; }
-      else if (key === yestKey) { counts.yesterday++; volumes.yesterday += pi; }
-      else if (key === d2Key)   { counts.dayBefore++; volumes.dayBefore += pi; }
+      if (!t.ledger_close_time.startsWith(todayStr)) { hitYesterday = true; break; }
+      count++;
+      if (t.base_asset_type    === 'native') volume += parseFloat(t.base_amount    || 0);
+      if (t.counter_asset_type === 'native') volume += parseFloat(t.counter_amount || 0);
     }
+    if (hitYesterday) break;
 
     fetched += records.length;
     const next = data._links?.next?.href;
@@ -92,7 +85,9 @@ export async function fetchTradeStats() {
     url = next;
   }
 
-  return { counts, volumes, keys: { todayKey, yestKey, d2Key } };
+  if (fetched >= TRADE_CAP) capped = true;
+
+  return { count, volume, capped };
 }
 
 export async function fetchPoolById(poolId) {
