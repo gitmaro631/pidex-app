@@ -119,11 +119,11 @@ export async function renderDashboard(container) {
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${tradeStats.weeklyAvgCount.toLocaleString()}</div>
-          <div class="dash-stat-label">일평균 거래 건수 <span class="en">7d Avg Trades</span></div>
+          <div class="dash-stat-label">7일 평균 거래 건수 <span class="en">7d Avg Trades</span></div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${formatLargeNum(tradeStats.weeklyAvgVolume)}</div>
-          <div class="dash-stat-label">일평균 Pi 거래량 <span class="en">7d Avg Volume</span></div>
+          <div class="dash-stat-label">7일 평균 Pi 거래량 <span class="en">7d Avg Volume</span></div>
         </div>
       </div>
 

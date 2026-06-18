@@ -62,7 +62,7 @@ export async function fetchTradeStats() {
   let done = false;
   let fetched = 0;
 
-  while (url && !done && fetched < 2000) {
+  while (url && !done && fetched < 10000) {
     const res     = await fetch(url);
     const data    = await res.json();
     const records = data._embedded?.records ?? [];
@@ -85,11 +85,11 @@ export async function fetchTradeStats() {
     url = next;
   }
 
-  const days         = Object.keys(dailyCount);
-  const totalCount   = days.reduce((s, k) => s + dailyCount[k],  0);
-  const totalVolume  = days.reduce((s, k) => s + dailyVolume[k], 0);
-  const avgCount     = days.length ? Math.round(totalCount  / days.length) : 0;
-  const avgVolume    = days.length ? Math.round(totalVolume / days.length) : 0;
+  const days        = Object.keys(dailyCount);
+  const totalCount  = days.reduce((s, k) => s + dailyCount[k],  0);
+  const totalVolume = days.reduce((s, k) => s + dailyVolume[k], 0);
+  const avgCount    = days.length ? Math.round(totalCount  / 7) : 0;
+  const avgVolume   = days.length ? Math.round(totalVolume / 7) : 0;
 
   return {
     todayCount:  dailyCount[todayStr]  || 0,
