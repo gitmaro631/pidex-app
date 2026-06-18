@@ -151,6 +151,9 @@ select.form-input { appearance: none; }
 .sub-plan.active { border-color: var(--accent); background: rgba(124,106,247,.08); }
 .sub-plan-price { font-size: 28px; font-weight: 700; color: var(--accent); margin: 8px 0; }
 
+/* ── LP 검색창 ── */
+.search-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+
 /* ── 탭 필터 버튼 ── */
 .filter-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
 .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }

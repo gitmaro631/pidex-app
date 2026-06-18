@@ -6,11 +6,18 @@ let allPools      = [];
 let selectedPool  = null;
 let currentFilter = 'volume';
 let piOnly        = false;
+let searchQuery   = '';
 
 export async function renderLPHelper(container) {
   container.innerHTML = `
     <div class="page-content">
       <h2 class="page-title">LP 계산기 <span class="en">LP Calculator</span></h2>
+
+      <div class="search-row">
+        <input type="text" class="form-input" id="lp-search"
+          placeholder="코인 검색 Search token (예: USDT)" style="flex:1;" />
+        <button class="btn-outline btn-sm" id="btn-search-clear" style="width:auto;padding:0 12px;">✕</button>
+      </div>
 
       <div class="filter-row">
         <div class="filter-tabs">
@@ -65,6 +72,17 @@ export async function renderLPHelper(container) {
     renderPoolList(container);
   });
 
+  container.querySelector('#lp-search').addEventListener('input', function () {
+    searchQuery = this.value.trim();
+    renderPoolList(container);
+  });
+
+  container.querySelector('#btn-search-clear').addEventListener('click', () => {
+    searchQuery = '';
+    container.querySelector('#lp-search').value = '';
+    renderPoolList(container);
+  });
+
   try {
     allPools = await fetchPools(2000);
     renderPoolList(container);
@@ -84,6 +102,13 @@ function sortedPools() {
   let pools = piOnly
     ? allPools.filter(p => p.assetAId === 'Pi' || p.assetBId === 'Pi')
     : [...allPools];
+
+  if (searchQuery) {
+    const q = searchQuery.toUpperCase();
+    pools = pools.filter(p =>
+      p.assetA.toUpperCase().includes(q) || p.assetB.toUpperCase().includes(q)
+    );
+  }
 
   const liq = p => Math.min(p.reserveA, p.reserveB);
   if (currentFilter === 'volume')
