@@ -85,12 +85,13 @@ function sortedPools() {
     ? allPools.filter(p => p.assetAId === 'Pi' || p.assetBId === 'Pi')
     : [...allPools];
 
+  const liq = p => Math.min(p.reserveA, p.reserveB);
   if (currentFilter === 'volume')
-    return pools.sort((a, b) => b.tradeCount - a.tradeCount);
+    return pools.sort((a, b) => (b.tradeCount - a.tradeCount) || (liq(b) - liq(a)));
   if (currentFilter === 'liquidity')
-    return pools.sort((a, b) => Math.min(b.reserveA, b.reserveB) - Math.min(a.reserveA, a.reserveB));
+    return pools.sort((a, b) => liq(b) - liq(a));
   if (currentFilter === 'fee')
-    return pools.sort((a, b) => (b.fee_bp * b.tradeCount) - (a.fee_bp * a.tradeCount));
+    return pools.sort((a, b) => ((b.fee_bp * b.tradeCount) - (a.fee_bp * a.tradeCount)) || (liq(b) - liq(a)));
   return pools;
 }
 
