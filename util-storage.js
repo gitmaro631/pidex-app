@@ -1,12 +1,10 @@
-// localStorage 헬퍼
-
 const KEYS = {
   ARB_COUNT:   'arb_count',
   ARB_DATE:    'arb_date',
   SUB_EXPIRY:  'sub_expiry',
 };
 
-const FREE_DAILY_LIMIT = 3;
+const FREE_DAILY_LIMIT = 100;
 
 export function getDailyArbCount() {
   const today = new Date().toISOString().slice(0, 10);

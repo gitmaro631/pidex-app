@@ -1,25 +1,19 @@
-// 숫자 포매팅 헬퍼
-
 export function formatPi(amount, decimals = 4) {
-  const n = parseFloat(amount ?? 0);
-  return n.toFixed(decimals) + ' Pi';
+  return parseFloat(amount ?? 0).toFixed(decimals) + ' Pi';
 }
 
 export function formatToken(amount, symbol = '', decimals = 4) {
-  const n = parseFloat(amount ?? 0);
-  return n.toFixed(decimals) + (symbol ? ` ${symbol}` : '');
+  return parseFloat(amount ?? 0).toFixed(decimals) + (symbol ? ` ${symbol}` : '');
 }
 
 export function formatPct(pct, sign = true) {
   const n = parseFloat(pct ?? 0);
-  const s = sign && n > 0 ? '+' : '';
-  return `${s}${n.toFixed(4)}%`;
+  return `${sign && n > 0 ? '+' : ''}${n.toFixed(4)}%`;
 }
 
 export function formatPctShort(pct, sign = true) {
   const n = parseFloat(pct ?? 0);
-  const s = sign && n > 0 ? '+' : '';
-  return `${s}${n.toFixed(2)}%`;
+  return `${sign && n > 0 ? '+' : ''}${n.toFixed(2)}%`;
 }
 
 export function formatLargeNum(n) {
@@ -29,7 +23,7 @@ export function formatLargeNum(n) {
 }
 
 export function pctClass(pct) {
-  if (pct > 0)  return 'val-green';
-  if (pct < 0)  return 'val-red';
+  if (pct > 0) return 'val-green';
+  if (pct < 0) return 'val-red';
   return '';
 }
