@@ -117,7 +117,6 @@ export async function renderDashboard(container) {
         ${[
           { label: '오늘 Today',     k: 'today'     },
           { label: '어제 Yesterday', k: 'yesterday' },
-          { label: '그저께 D-2',     k: 'dayBefore' },
         ].map(r => `
           <div class="trade-row">
             <span class="trade-period">${r.label}</span>

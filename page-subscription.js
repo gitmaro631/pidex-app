@@ -1,7 +1,5 @@
 import { setWalletTabVisible, showToast } from './app.js';
 
-const YOUTUBE_URL    = 'https://youtube.com/@hiddenstrokes-j5w';
-const YOUTUBE_INTENT = 'intent://www.youtube.com/@hiddenstrokes-j5w#Intent;package=com.google.android.youtube;scheme=https;end';
 const PUB_KEY_STORAGE = 'stellar_pub_key';
 
 export function renderSubscription(container) {
@@ -95,25 +93,24 @@ export function renderSubscription(container) {
       <div class="contact-card">
         <div class="contact-title">문의 및 피드백 <span class="en">Contact &amp; Feedback</span></div>
         <p class="contact-desc">
-          사용 중 문의사항이나 피드백은 아래 유튜브 채널 댓글로 남겨주세요.<br>
+          사용 중 문의사항이나 피드백은 유튜브 채널 댓글로 남겨주세요.<br>
           <span class="en">Leave questions or feedback in the YouTube channel comments.</span>
         </p>
-        <a href="${YOUTUBE_URL}" target="_blank" rel="noopener noreferrer" class="youtube-link" id="yt-link">
+        <div class="youtube-link">
           <span class="yt-icon">▶</span>
           <span class="yt-text">
             <span class="yt-label">Hidden Strokes</span>
-            <span class="yt-sub">유튜브 채널 YouTube Channel</span>
+            <span class="yt-sub">youtube.com/@hiddenstrokes-j5w</span>
           </span>
-          <span class="yt-arrow">›</span>
-        </a>
+        </div>
+        <p class="contact-desc" style="margin-top:8px;font-size:11px;">
+          위 주소를 유튜브에서 직접 검색해주세요.<br>
+          <span class="en">Search the channel URL directly in YouTube.</span>
+        </p>
       </div>
     </div>
   `;
 
-  container.querySelector('#yt-link').addEventListener('click', e => {
-    e.preventDefault();
-    window.open(YOUTUBE_URL, '_blank', 'noopener,noreferrer');
-  });
 
   if (savedKey) {
     container.querySelector('#btn-remove-pubkey').addEventListener('click', () => {
