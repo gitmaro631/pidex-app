@@ -52,17 +52,22 @@ function parsePool(p) {
 }
 
 export async function fetchTradeStats() {
-  const now      = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const weekAgo  = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const cutoffs = {
+    day:     new Date(now - 1  * 24 * 60 * 60 * 1000),
+    week:    new Date(now - 7  * 24 * 60 * 60 * 1000),
+    month:   new Date(now - 30 * 24 * 60 * 60 * 1000),
+    quarter: new Date(now - 90 * 24 * 60 * 60 * 1000),
+  };
 
-  const dailyCount  = {};
-  const dailyVolume = {};
-  let url  = `${HORIZON}/trades?limit=200&order=desc`;
-  let done = false;
+  const counts  = { day: 0, week: 0, month: 0, quarter: 0 };
+  const volumes = { day: 0, week: 0, month: 0, quarter: 0 };
+
+  let url     = `${HORIZON}/trades?limit=200&order=desc`;
+  let done    = false;
   let fetched = 0;
 
-  while (url && !done && fetched < 10000) {
+  while (url && !done && fetched < 50000) {
     const res     = await fetch(url);
     const data    = await res.json();
     const records = data._embedded?.records ?? [];
@@ -70,13 +75,16 @@ export async function fetchTradeStats() {
 
     for (const t of records) {
       const d = new Date(t.ledger_close_time);
-      if (d < weekAgo) { done = true; break; }
-      const key = t.ledger_close_time.slice(0, 10);
-      dailyCount[key]  = (dailyCount[key]  || 0) + 1;
+      if (d < cutoffs.quarter) { done = true; break; }
+
       let pi = 0;
       if (t.base_asset_type    === 'native') pi += parseFloat(t.base_amount    || 0);
       if (t.counter_asset_type === 'native') pi += parseFloat(t.counter_amount || 0);
-      dailyVolume[key] = (dailyVolume[key] || 0) + pi;
+
+      if (d >= cutoffs.day)   { counts.day++;     volumes.day     += pi; }
+      if (d >= cutoffs.week)  { counts.week++;    volumes.week    += pi; }
+      if (d >= cutoffs.month) { counts.month++;   volumes.month   += pi; }
+      counts.quarter++;  volumes.quarter += pi;
     }
 
     fetched += records.length;
@@ -85,18 +93,7 @@ export async function fetchTradeStats() {
     url = next;
   }
 
-  const days        = Object.keys(dailyCount);
-  const totalCount  = days.reduce((s, k) => s + dailyCount[k],  0);
-  const totalVolume = days.reduce((s, k) => s + dailyVolume[k], 0);
-  const avgCount    = days.length ? Math.round(totalCount  / 7) : 0;
-  const avgVolume   = days.length ? Math.round(totalVolume / 7) : 0;
-
-  return {
-    todayCount:  dailyCount[todayStr]  || 0,
-    todayVolume: dailyVolume[todayStr] || 0,
-    weeklyAvgCount:  avgCount,
-    weeklyAvgVolume: avgVolume,
-  };
+  return { counts, volumes };
 }
 
 export async function fetchPoolById(poolId) {

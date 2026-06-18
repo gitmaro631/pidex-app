@@ -108,23 +108,23 @@ export async function renderDashboard(container) {
       </div>
 
       <div class="dash-section-title">거래 현황 <span class="en">Trading Activity</span></div>
-      <div class="dash-grid">
-        <div class="dash-stat-card">
-          <div class="dash-stat-val">${tradeStats.todayCount.toLocaleString()}</div>
-          <div class="dash-stat-label">오늘 거래 건수 <span class="en">Today Trades</span></div>
+      <div class="card dash-trade-table">
+        <div class="trade-row trade-header">
+          <span>기간 <span class="en">Period</span></span>
+          <span>거래 건수 <span class="en">Trades</span></span>
+          <span>Pi 거래량 <span class="en">Volume</span></span>
         </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-val">${formatLargeNum(tradeStats.todayVolume)}</div>
-          <div class="dash-stat-label">오늘 Pi 거래량 <span class="en">Today Volume</span></div>
-        </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-val">${tradeStats.weeklyAvgCount.toLocaleString()}</div>
-          <div class="dash-stat-label">7일 평균 거래 건수 <span class="en">7d Avg Trades</span></div>
-        </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-val">${formatLargeNum(tradeStats.weeklyAvgVolume)}</div>
-          <div class="dash-stat-label">7일 평균 Pi 거래량 <span class="en">7d Avg Volume</span></div>
-        </div>
+        ${[
+          { label: '오늘 Today',     k: 'day'     },
+          { label: '7일 Week',       k: 'week'    },
+          { label: '1개월 Month',    k: 'month'   },
+          { label: '3개월 Quarter',  k: 'quarter' },
+        ].map(r => `
+          <div class="trade-row">
+            <span class="trade-period">${r.label}</span>
+            <span>${tradeStats.counts[r.k].toLocaleString()}</span>
+            <span>${formatLargeNum(tradeStats.volumes[r.k])}</span>
+          </div>`).join('')}
       </div>
 
       <div class="dash-section-title">유동성 <span class="en">Liquidity</span></div>
