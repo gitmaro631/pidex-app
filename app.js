@@ -58,9 +58,6 @@ async function doLogin() {
     const auth = await authenticate();
     document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
 
-    const { isSubscribed } = await import('./util-storage.js');
-    if (isSubscribed()) document.getElementById('header-sub-badge').classList.remove('hidden');
-
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     hideLoading();
