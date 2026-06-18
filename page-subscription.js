@@ -9,50 +9,23 @@ export function renderSubscription(container) {
     <div class="page-content">
       <h2 class="page-title">정보 <span class="en">Info</span></h2>
 
-      <div class="card">
+      <div class="card about-card">
         <div class="card-title">앱 소개 <span class="en">About</span></div>
-        <div class="info-list">
-          <div class="info-item">
-            <span class="info-icon">🔄</span>
-            <div>
-              <div class="info-label">차익 탐색 <span class="en">Arbitrage Finder</span></div>
-              <div class="info-desc ko">삼각차익 경로를 스캔하고 AMM 수수료·가스비·가격충격을 포함한 순 수익률을 시뮬레이션합니다. 무료 100회/일.</div>
-              <div class="info-desc en-desc">Scans triangular arbitrage paths and simulates net return including AMM fee, gas, and price impact. Free 100×/day.</div>
+        ${[
+          { icon: '📊', ko: '덱스 현황',    en: 'DEX Dashboard',    desc_ko: 'PiDEX 전체 풀·유동성·거래 현황을 한눈에 확인합니다.',                        desc_en: 'View pools, liquidity and trading activity at a glance.' },
+          { icon: '🔄', ko: '차익 탐색',    en: 'Arbitrage Finder', desc_ko: '삼각차익 경로를 스캔하고 순 수익률을 시뮬레이션합니다. 무료 100회/일.',        desc_en: 'Scan arbitrage paths and simulate net return. Free 100×/day.' },
+          { icon: '⇄',  ko: '스왑 시뮬레이터', en: 'Swap Simulator',   desc_ko: '예상 수령량·환율·수수료·가격충격을 미리 계산합니다.',                      desc_en: 'Preview receive amount, rate, fee and price impact.' },
+          { icon: '💧', ko: 'LP 계산기',    en: 'LP Calculator',    desc_ko: '유동성 풀 예치 비율을 사전에 계산하고 풀 통계를 비교합니다.',                   desc_en: 'Calculate deposit ratios and compare pool statistics.' },
+          { icon: '↓',  ko: '새로고침',     en: 'Pull to Refresh',  desc_ko: '각 탭 최상단에서 아래로 드래그하면 데이터가 새로고침됩니다.',                   desc_en: 'Pull down from the top of any tab to refresh.' },
+        ].map(f => `
+          <div class="about-row">
+            <span class="about-icon">${f.icon}</span>
+            <div class="about-body">
+              <div class="about-title">${f.ko} <span class="about-en">${f.en}</span></div>
+              <div class="about-desc">${f.desc_ko}</div>
+              <div class="about-desc about-desc-en">${f.desc_en}</div>
             </div>
-          </div>
-          <div class="info-item">
-            <span class="info-icon">⇄</span>
-            <div>
-              <div class="info-label">스왑 시뮬레이터 <span class="en">Swap Simulator</span></div>
-              <div class="info-desc ko">토큰 교환 시 예상 수령량·환율·수수료·가격충격을 미리 계산합니다.</div>
-              <div class="info-desc en-desc">Preview expected receive amount, exchange rate, fee, and price impact before swapping.</div>
-            </div>
-          </div>
-          <div class="info-item">
-            <span class="info-icon">💧</span>
-            <div>
-              <div class="info-label">LP 계산기 <span class="en">LP Calculator</span></div>
-              <div class="info-desc ko">유동성 풀 예치 비율을 사전에 계산하고 풀 통계를 비교합니다.</div>
-              <div class="info-desc en-desc">Calculate deposit ratios in advance and compare pool statistics.</div>
-            </div>
-          </div>
-          <div class="info-item">
-            <span class="info-icon">📊</span>
-            <div>
-              <div class="info-label">덱스 현황 <span class="en">DEX Dashboard</span></div>
-              <div class="info-desc ko">PiDEX 전체 풀 수, 유동성, 거래 현황을 한눈에 확인합니다.</div>
-              <div class="info-desc en-desc">View total pools, liquidity, and trading activity across PiDEX at a glance.</div>
-            </div>
-          </div>
-          <div class="info-item">
-            <span class="info-icon">↓</span>
-            <div>
-              <div class="info-label">새로고침 <span class="en">Pull to Refresh</span></div>
-              <div class="info-desc ko">각 탭 화면 최상단에서 아래로 드래그하면 데이터가 새로고침됩니다.</div>
-              <div class="info-desc en-desc">Pull down from the top of any tab to refresh data.</div>
-            </div>
-          </div>
-        </div>
+          </div>`).join('')}
       </div>
 
       <div class="card notice-card">
