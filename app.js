@@ -24,6 +24,7 @@ export function showToast(msg, type = '') {
 }
 
 let activePage = 'dashboard';
+const renderedPages = new Set();
 
 const PAGE_RENDERERS = {
   dashboard: (c) => renderDashboard(c),
@@ -41,6 +42,12 @@ export function setWalletTabVisible(visible) {
   else         tab.classList.add('nav-tab-hidden');
 }
 
+export function rerenderPage(pageKey) {
+  const pageEl = document.getElementById(`page-${pageKey}`);
+  if (!pageEl) return;
+  PAGE_RENDERERS[pageKey]?.(pageEl);
+}
+
 function switchPage(pageKey) {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -49,7 +56,10 @@ function switchPage(pageKey) {
   pageEl.classList.remove('hidden');
   tabEl.classList.add('active');
   activePage = pageKey;
-  PAGE_RENDERERS[pageKey]?.(pageEl);
+  if (!renderedPages.has(pageKey)) {
+    renderedPages.add(pageKey);
+    PAGE_RENDERERS[pageKey]?.(pageEl);
+  }
 }
 
 async function doLogin() {

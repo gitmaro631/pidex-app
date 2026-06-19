@@ -1,6 +1,6 @@
 import { fetchAccount, fetchPoolById } from './horizon.js';
 import { formatPi, formatToken, formatLargeNum } from './util-format.js';
-import { showLoading, hideLoading } from './app.js';
+import { showLoading, hideLoading, rerenderPage } from './app.js';
 
 const STORAGE_KEY = 'stellar_pub_key';
 
@@ -9,10 +9,14 @@ export async function renderWallet(container) {
 
   container.innerHTML = `
     <div class="page-content">
-      <h2 class="page-title">지갑 현황 <span class="en">Wallet Overview</span></h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <h2 class="page-title" style="margin-bottom:0;">지갑 현황 <span class="en">Wallet Overview</span></h2>
+        <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ 새로고침</button>
+      </div>
       <div class="wallet-loading">잔액 조회 중... Loading...</div>
     </div>
   `;
+  container.querySelector('#btn-wallet-refresh').addEventListener('click', () => rerenderPage('wallet'));
 
   if (!pubKey) {
     container.querySelector('.wallet-loading').textContent = '정보 탭에서 공개주소를 등록해주세요.';
