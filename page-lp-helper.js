@@ -7,6 +7,8 @@ let selectedPool = null;
 let piOnly       = false;
 let piFirst      = false;
 let searchQuery  = '';
+let currentPage  = 1;
+const PAGE_SIZE  = 30;
 
 export async function renderLPHelper(container) {
   container.innerHTML = `
@@ -44,28 +46,33 @@ export async function renderLPHelper(container) {
           <div id="lp-preview" class="hidden"></div>
         </div>
       </div>
+      <div class="lp-bottom" id="lp-page-bar"></div>
     </div>
   `;
 
   container.querySelector('#btn-pi-only').addEventListener('click', () => {
     piOnly = !piOnly;
+    currentPage = 1;
     container.querySelector('#btn-pi-only').classList.toggle('active', piOnly);
     renderPoolList(container);
   });
 
   container.querySelector('#btn-pi-first').addEventListener('click', () => {
     piFirst = !piFirst;
+    currentPage = 1;
     container.querySelector('#btn-pi-first').classList.toggle('active', piFirst);
     renderPoolList(container);
   });
 
   container.querySelector('#lp-search').addEventListener('input', function () {
     searchQuery = this.value.trim();
+    currentPage = 1;
     renderPoolList(container);
   });
 
   container.querySelector('#btn-search-clear').addEventListener('click', () => {
     searchQuery = '';
+    currentPage = 1;
     container.querySelector('#lp-search').value = '';
     renderPoolList(container);
   });
@@ -116,7 +123,13 @@ function sortedPools() {
 
 function renderPoolList(container) {
   const list  = container.querySelector('#pool-list');
-  const pools = sortedPools().slice(0, 30);
+  const all   = sortedPools();
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const pools = all.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  renderPageBar(container, total, totalPages);
 
   if (pools.length === 0) {
     list.innerHTML = '<p style="color:var(--text2);text-align:center;padding:24px;">조건에 맞는 풀 없음</p>';
@@ -151,6 +164,35 @@ function renderPoolList(container) {
       card.classList.add('selected');
       selectedPool = allPools.find(p => p.id === card.dataset.poolId);
       showLPForm(container);
+    });
+  });
+}
+
+function renderPageBar(container, total, totalPages) {
+  const bar = container.querySelector('#lp-page-bar');
+  if (!bar) return;
+  if (totalPages <= 1) { bar.innerHTML = ''; return; }
+
+  const WINDOW = 5;
+  let start = Math.max(1, currentPage - Math.floor(WINDOW / 2));
+  let end   = Math.min(totalPages, start + WINDOW - 1);
+  if (end - start < WINDOW - 1) start = Math.max(1, end - WINDOW + 1);
+
+  let html = '';
+  if (currentPage > 1)
+    html += `<button class="page-btn" data-page="${currentPage - 1}">‹</button>`;
+  for (let i = start; i <= end; i++)
+    html += `<button class="page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+  if (currentPage < totalPages)
+    html += `<button class="page-btn" data-page="${currentPage + 1}">›</button>`;
+
+  bar.innerHTML = html;
+
+  bar.querySelectorAll('.page-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPage = parseInt(btn.dataset.page, 10);
+      renderPoolList(container);
+      container.querySelector('#pool-scroll').scrollTop = 0;
     });
   });
 }
