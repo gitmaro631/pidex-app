@@ -39,7 +39,7 @@ export async function renderLPHelper(container) {
           <div class="form-group">
             <label class="form-label">투입할 총 Pi <span class="en">Total Pi to Deposit</span></label>
             <div class="input-unit-row">
-              <input type="number" class="form-input" id="lp-amount" placeholder="예: 100" min="0" step="1" />
+              <input type="number" class="form-input" id="lp-amount" placeholder="e.g. 100" min="0" step="1" />
               <span class="unit-label">Pi</span>
             </div>
           </div>
