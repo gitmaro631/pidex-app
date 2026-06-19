@@ -45,7 +45,7 @@ export async function renderSwap(container) {
           <div style="display:flex;gap:8px;">
             <select class="form-input" id="lp-split-token" style="flex:1;"></select>
             <input type="number" class="form-input" id="lp-split-amount"
-              placeholder="수량" style="flex:1;" min="0" step="any"/>
+              placeholder="수량 Amount" style="flex:1;" min="0" step="any"/>
           </div>
         </div>
         <div class="form-group">
