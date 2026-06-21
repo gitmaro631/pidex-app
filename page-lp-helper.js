@@ -12,13 +12,19 @@ let currentPage  = 1;
 const PAGE_SIZE  = 30;
 
 function getMissingPairs() {
-  const tokens = [...new Set(allPools.flatMap(p => [p.assetAId, p.assetBId]))].sort();
+  const idToName = {};
+  allPools.forEach(p => {
+    idToName[p.assetAId] = p.assetA;
+    idToName[p.assetBId] = p.assetB;
+  });
+  const tokens   = [...new Set(allPools.flatMap(p => [p.assetAId, p.assetBId]))].sort();
   const existing = new Set(allPools.map(p => [p.assetAId, p.assetBId].sort().join('|')));
   const pairs = [];
   for (let i = 0; i < tokens.length; i++)
     for (let j = i + 1; j < tokens.length; j++) {
       const key = [tokens[i], tokens[j]].sort().join('|');
-      if (!existing.has(key)) pairs.push([tokens[i], tokens[j]]);
+      if (!existing.has(key))
+        pairs.push({ nameA: idToName[tokens[i]], nameB: idToName[tokens[j]], idA: tokens[i], idB: tokens[j] });
     }
   return pairs;
 }
@@ -192,9 +198,9 @@ function renderNewPoolList(container) {
 
   if (searchQuery) {
     const q = searchQuery.toUpperCase();
-    pairs = pairs.filter(([a, b]) => a.toUpperCase().includes(q) || b.toUpperCase().includes(q));
+    pairs = pairs.filter(p => p.nameA.toUpperCase().includes(q) || p.nameB.toUpperCase().includes(q));
   }
-  if (piOnly) pairs = pairs.filter(([a, b]) => a === 'Pi' || b === 'Pi');
+  if (piOnly) pairs = pairs.filter(p => p.idA === 'Pi' || p.idB === 'Pi');
 
   const total      = pairs.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -212,9 +218,9 @@ function renderNewPoolList(container) {
     <p style="color:var(--text2);font-size:12px;padding:8px 4px 4px;">
       아직 풀이 없는 토큰 조합 <span class="en">Pairs without a pool</span> — ${total.toLocaleString()}개
     </p>
-    ${page.map(([a, b]) => `
+    ${page.map(p => `
       <div class="pool-card new-pool-card">
-        <div class="pool-name">${a} / ${b}</div>
+        <div class="pool-name">${p.nameA} / ${p.nameB}</div>
         <div class="pool-reserves" style="color:var(--accent);font-size:12px;">
           풀 없음 · No pool exists
         </div>
