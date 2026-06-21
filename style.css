@@ -117,6 +117,8 @@ select.form-input { appearance: none; }
   padding: 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s;
 }
 .pool-card:hover, .pool-card.selected { border-color: var(--accent); }
+.new-pool-card { border-style: dashed; cursor: default; }
+.new-pool-card:hover { border-color: var(--accent2); }
 .pool-name      { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
 .pool-reserves  { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 6px; }
 .reserve-item   { color: var(--text); }

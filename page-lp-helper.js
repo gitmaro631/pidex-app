@@ -6,9 +6,22 @@ let allPools     = [];
 let selectedPool = null;
 let piOnly       = false;
 let piFirst      = false;
+let newPool      = false;
 let searchQuery  = '';
 let currentPage  = 1;
 const PAGE_SIZE  = 30;
+
+function getMissingPairs() {
+  const tokens = [...new Set(allPools.flatMap(p => [p.assetAId, p.assetBId]))].sort();
+  const existing = new Set(allPools.map(p => [p.assetAId, p.assetBId].sort().join('|')));
+  const pairs = [];
+  for (let i = 0; i < tokens.length; i++)
+    for (let j = i + 1; j < tokens.length; j++) {
+      const key = [tokens[i], tokens[j]].sort().join('|');
+      if (!existing.has(key)) pairs.push([tokens[i], tokens[j]]);
+    }
+  return pairs;
+}
 
 export async function renderLPHelper(container) {
   container.innerHTML = `
@@ -27,6 +40,9 @@ export async function renderLPHelper(container) {
           </button>
           <button class="toggle-btn ${piFirst ? 'active' : ''}" id="btn-pi-first">
             파이우선<br><span class="en-tab">Pi First</span>
+          </button>
+          <button class="toggle-btn ${newPool ? 'active' : ''}" id="btn-new-pool">
+            새풀<br><span class="en-tab">New Pool</span>
           </button>
         </div>
       </div>
@@ -61,6 +77,13 @@ export async function renderLPHelper(container) {
     piFirst = !piFirst;
     currentPage = 1;
     container.querySelector('#btn-pi-first').classList.toggle('active', piFirst);
+    renderPoolList(container);
+  });
+
+  container.querySelector('#btn-new-pool').addEventListener('click', () => {
+    newPool = !newPool;
+    currentPage = 1;
+    container.querySelector('#btn-new-pool').classList.toggle('active', newPool);
     renderPoolList(container);
   });
 
@@ -122,9 +145,16 @@ function sortedPools() {
 }
 
 function renderPoolList(container) {
-  const list  = container.querySelector('#pool-list');
-  const all   = sortedPools();
-  const total = all.length;
+  const list = container.querySelector('#pool-list');
+  container.querySelector('#lp-form').classList.add('hidden');
+
+  if (newPool) {
+    renderNewPoolList(container);
+    return;
+  }
+
+  const all        = sortedPools();
+  const total      = all.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (currentPage > totalPages) currentPage = totalPages;
   const pools = all.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -136,27 +166,15 @@ function renderPoolList(container) {
     return;
   }
 
-  list.innerHTML = pools.map(pool => {
-    const piSide  = pool.assetAId === 'Pi' ? pool.reserveA : pool.assetBId === 'Pi' ? pool.reserveB : null;
-    const minLiq  = Math.min(pool.reserveA, pool.reserveB);
-    const ratioA  = ((pool.reserveA / (pool.reserveA + pool.reserveB)) * 100).toFixed(1);
-    const ratioB  = (100 - parseFloat(ratioA)).toFixed(1);
-    return `
-      <div class="pool-card" data-pool-id="${pool.id}">
-        <div class="pool-name">${pool.assetA} / ${pool.assetB}</div>
-        <div class="pool-reserves">
-          <span class="reserve-item"><span class="reserve-token">${pool.assetA}</span> ${formatLargeNum(pool.reserveA)}</span>
-          <span class="reserve-sep">·</span>
-          <span class="reserve-item"><span class="reserve-token">${pool.assetB}</span> ${formatLargeNum(pool.reserveB)}</span>
-        </div>
-        <div class="pool-stats">
-          <span class="pool-stat">최소 유동성 <span class="en-tag">Min Liq</span>: <span>${formatLargeNum(minLiq)}</span></span>
-          ${piSide !== null ? `<span class="pool-stat">Pi 유동성 <span class="en-tag">Pi Liq</span>: <span>${formatLargeNum(piSide)}</span></span>` : ''}
-          <span class="pool-stat">수수료 <span class="en-tag">Fee</span>: <span>${(pool.fee_bp / 100).toFixed(2)}%</span></span>
-          <span class="pool-stat">비율 <span class="en-tag">Ratio</span>: <span>${ratioA}% : ${ratioB}%</span></span>
-        </div>
-      </div>`;
-  }).join('');
+  list.innerHTML = pools.map(pool => `
+    <div class="pool-card" data-pool-id="${pool.id}">
+      <div class="pool-name">${pool.assetA} / ${pool.assetB}</div>
+      <div class="pool-reserves">
+        <span class="reserve-item"><span class="reserve-token">${pool.assetA}</span> ${formatLargeNum(pool.reserveA)}</span>
+        <span class="reserve-sep">·</span>
+        <span class="reserve-item"><span class="reserve-token">${pool.assetB}</span> ${formatLargeNum(pool.reserveB)}</span>
+      </div>
+    </div>`).join('');
 
   list.querySelectorAll('.pool-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -166,6 +184,41 @@ function renderPoolList(container) {
       showLPForm(container);
     });
   });
+}
+
+function renderNewPoolList(container) {
+  const list = container.querySelector('#pool-list');
+  let pairs  = getMissingPairs();
+
+  if (searchQuery) {
+    const q = searchQuery.toUpperCase();
+    pairs = pairs.filter(([a, b]) => a.toUpperCase().includes(q) || b.toUpperCase().includes(q));
+  }
+  if (piOnly) pairs = pairs.filter(([a, b]) => a === 'Pi' || b === 'Pi');
+
+  const total      = pairs.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const page = pairs.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  renderPageBar(container, total, totalPages);
+
+  if (page.length === 0) {
+    list.innerHTML = '<p style="color:var(--text2);text-align:center;padding:24px;">조건에 맞는 새풀 조합 없음</p>';
+    return;
+  }
+
+  list.innerHTML = `
+    <p style="color:var(--text2);font-size:12px;padding:8px 4px 4px;">
+      아직 풀이 없는 토큰 조합 <span class="en">Pairs without a pool</span> — ${total.toLocaleString()}개
+    </p>
+    ${page.map(([a, b]) => `
+      <div class="pool-card new-pool-card">
+        <div class="pool-name">${a} / ${b}</div>
+        <div class="pool-reserves" style="color:var(--accent);font-size:12px;">
+          풀 없음 · No pool exists
+        </div>
+      </div>`).join('')}`;
 }
 
 function renderPageBar(container, total, totalPages) {
