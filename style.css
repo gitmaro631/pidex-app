@@ -161,10 +161,10 @@ select.form-input { appearance: none; }
 .lp-sticky         { position: sticky; top: 0; z-index: 10; padding: 12px 12px 8px; background: var(--bg1); border-bottom: 1px solid var(--border); margin-bottom: 8px; }
 .lp-filter-row     { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .sort-badge        { background: var(--accent); color: #fff; border-radius: 10px; padding: 5px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.pool-scroll-frame { padding: 0 12px 70px; }
+.pool-scroll-frame { padding: 0 12px 120px; }
 
 /* ── LP 페이지 바 ── */
-.lp-bottom  { position: sticky; bottom: 0; z-index: 10; background: var(--bg1); border-top: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 48px; }
+.lp-bottom  { position: fixed; bottom: 60px; left: 0; right: 0; z-index: 30; background: var(--bg1); border-top: 1px solid var(--border); padding: 8px 12px; display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 48px; }
 .page-btn   { background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; min-width: 36px; }
 .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 

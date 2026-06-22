@@ -254,7 +254,8 @@ function renderNewPoolList(container) {
 function renderPageBar(container, total, totalPages) {
   const bar = container.querySelector('#lp-page-bar');
   if (!bar) return;
-  if (totalPages <= 1) { bar.innerHTML = ''; return; }
+  if (totalPages <= 1) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
 
   const WINDOW = 5;
   let start = Math.max(1, currentPage - Math.floor(WINDOW / 2));
