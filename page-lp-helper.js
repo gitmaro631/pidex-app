@@ -11,6 +11,18 @@ let searchQuery  = '';
 let currentPage  = 1;
 const PAGE_SIZE  = 30;
 
+function getPiPricePerToken(tokenId) {
+  if (tokenId === 'Pi') return 1;
+  const pool = allPools.find(p =>
+    (p.assetAId === 'Pi' && p.assetBId === tokenId) ||
+    (p.assetBId === 'Pi' && p.assetAId === tokenId)
+  );
+  if (!pool) return null;
+  return pool.assetAId === 'Pi'
+    ? pool.reserveA / pool.reserveB
+    : pool.reserveB / pool.reserveA;
+}
+
 function getMissingPairs() {
   const idToName = {};
   allPools.forEach(p => {
@@ -90,6 +102,10 @@ export async function renderLPHelper(container) {
     newPool = !newPool;
     currentPage = 1;
     container.querySelector('#btn-new-pool').classList.toggle('active', newPool);
+    const btnPiFirst = container.querySelector('#btn-pi-first');
+    btnPiFirst.disabled = newPool;
+    btnPiFirst.classList.toggle('disabled', newPool);
+    if (newPool && piFirst) { piFirst = false; btnPiFirst.classList.remove('active'); }
     renderPoolList(container);
   });
 
@@ -218,13 +234,21 @@ function renderNewPoolList(container) {
     <p style="color:var(--text2);font-size:12px;padding:8px 4px 4px;">
       아직 풀이 없는 토큰 조합 <span class="en">Pairs without a pool</span> — ${total.toLocaleString()}개
     </p>
-    ${page.map(p => `
-      <div class="pool-card new-pool-card">
+    ${page.map((p, i) => `
+      <div class="pool-card new-pool-card" data-pair-idx="${i}">
         <div class="pool-name">${p.nameA} / ${p.nameB}</div>
         <div class="pool-reserves" style="color:var(--accent);font-size:12px;">
           풀 없음 · No pool exists
         </div>
       </div>`).join('')}`;
+
+  list.querySelectorAll('.new-pool-card').forEach((card, i) => {
+    card.addEventListener('click', () => {
+      list.querySelectorAll('.new-pool-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      showNewPoolForm(container, page[i]);
+    });
+  });
 }
 
 function renderPageBar(container, total, totalPages) {
@@ -254,6 +278,83 @@ function renderPageBar(container, total, totalPages) {
       container.querySelector('#pool-scroll').scrollTop = 0;
     });
   });
+}
+
+function showNewPoolForm(container, pair) {
+  const form = container.querySelector('#lp-form');
+  form.classList.remove('hidden');
+
+  const priceA = getPiPricePerToken(pair.idA);
+  const priceB = getPiPricePerToken(pair.idB);
+
+  const priceInfo = (name, price) =>
+    price !== null
+      ? `1 ${name} ≈ <strong>${price.toFixed(4)} Pi</strong>`
+      : `<span style="color:var(--text2);">1 ${name} — Pi 시세 정보 없음</span>`;
+
+  container.querySelector('#lp-pool-name').textContent = `${pair.nameA} / ${pair.nameB} 새 풀`;
+  container.querySelector('#lp-pool-info').innerHTML = `
+    <div class="pool-info-row" style="margin-bottom:4px;">
+      <span>${priceInfo(pair.nameA, priceA)}</span>
+      <span>${priceInfo(pair.nameB, priceB)}</span>
+    </div>
+    <p style="color:var(--yellow);font-size:11px;margin-top:4px;">
+      ※ 초기 예치 비율이 곧 시작 가격이 됩니다. 아래는 현재 Pi 시세 기준 추천 비율입니다.
+    </p>`;
+
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  container.querySelector('#lp-amount').oninput = function () {
+    const totalPi = parseFloat(this.value);
+    const preview = container.querySelector('#lp-preview');
+    if (!totalPi || totalPi <= 0) { preview.classList.add('hidden'); return; }
+
+    const canA = priceA !== null;
+    const canB = priceB !== null;
+
+    if (!canA && !canB) {
+      preview.classList.remove('hidden');
+      preview.innerHTML = `<p style="color:var(--text2);font-size:12px;padding:8px 0;">두 토큰 모두 Pi 시세 정보가 없어 계산할 수 없습니다.</p>`;
+      return;
+    }
+
+    let amountA, amountB, piForA, piForB;
+    if (canA && canB) {
+      piForA = totalPi / 2;
+      piForB = totalPi / 2;
+      amountA = piForA / priceA;
+      amountB = piForB / priceB;
+    } else if (canA) {
+      piForA = totalPi;
+      amountA = piForA / priceA;
+      amountB = null;
+    } else {
+      piForB = totalPi;
+      amountB = piForB / priceB;
+      amountA = null;
+    }
+
+    preview.classList.remove('hidden');
+    preview.innerHTML = `
+      <div class="card" style="background:var(--bg3);margin:8px 0 0;">
+        <div class="card-title">예치 미리보기 <span class="en">Deposit Preview</span></div>
+        ${amountA !== null ? `
+        <div class="stat-row">
+          <span class="stat-label">${pair.nameA}</span>
+          <span class="stat-value">${formatToken(amountA, pair.nameA)}</span>
+        </div>` : ''}
+        ${amountB !== null ? `
+        <div class="stat-row">
+          <span class="stat-label">${pair.nameB}</span>
+          <span class="stat-value">${formatToken(amountB, pair.nameB)}</span>
+        </div>` : ''}
+        ${canA && canB ? `
+        <div class="stat-row">
+          <span class="stat-label">Pi 가치 배분 <span class="en">Pi Value Split</span></span>
+          <span class="stat-value">50% / 50%</span>
+        </div>` : ''}
+      </div>`;
+  };
 }
 
 function showLPForm(container) {

@@ -184,6 +184,7 @@ select.form-input { appearance: none; }
   padding: 6px 10px; font-size: 11px; color: var(--text2); cursor: pointer; line-height: 1.4; text-align: center; white-space: nowrap;
 }
 .toggle-btn.active { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.toggle-btn.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 .nav-tab-hidden { display: none !important; }
 .en-tab  { font-size: 9px; opacity: .7; }
 .en-tag  { font-size: 10px; color: var(--text2); }
