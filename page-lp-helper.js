@@ -335,24 +335,27 @@ function showNewPoolForm(container, pair) {
       amountA = null;
     }
 
+    const pctA = canA && canB ? 50 : canA ? 100 : 0;
+    const pctB = canA && canB ? 50 : canB ? 100 : 0;
+
     preview.classList.remove('hidden');
     preview.innerHTML = `
       <div class="card" style="background:var(--bg3);margin:8px 0 0;">
         <div class="card-title">예치 미리보기 <span class="en">Deposit Preview</span></div>
         ${amountA !== null ? `
         <div class="stat-row">
-          <span class="stat-label">${pair.nameA}</span>
+          <span class="stat-label">${pair.nameA} <span style="color:var(--accent);font-size:11px;">${pctA}%</span></span>
           <span class="stat-value">${formatToken(amountA, pair.nameA)}</span>
         </div>` : ''}
         ${amountB !== null ? `
         <div class="stat-row">
-          <span class="stat-label">${pair.nameB}</span>
+          <span class="stat-label">${pair.nameB} <span style="color:var(--accent);font-size:11px;">${pctB}%</span></span>
           <span class="stat-value">${formatToken(amountB, pair.nameB)}</span>
         </div>` : ''}
         ${canA && canB ? `
-        <div class="stat-row">
-          <span class="stat-label">Pi 가치 배분 <span class="en">Pi Value Split</span></span>
-          <span class="stat-value">50% / 50%</span>
+        <div class="stat-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;">
+          <span class="stat-label">예치 비율 <span class="en">Ratio</span></span>
+          <span class="stat-value">${pair.nameA} ${pctA}% / ${pair.nameB} ${pctB}%</span>
         </div>` : ''}
       </div>`;
   };
