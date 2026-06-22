@@ -305,7 +305,8 @@ function showNewPoolForm(container, pair) {
 
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  container.querySelector('#lp-amount').oninput = function () {
+  const amountInput = container.querySelector('#lp-amount');
+  amountInput.oninput = function () {
     const totalPi = parseFloat(this.value);
     const preview = container.querySelector('#lp-preview');
     if (!totalPi || totalPi <= 0) { preview.classList.add('hidden'); return; }
@@ -359,6 +360,7 @@ function showNewPoolForm(container, pair) {
         </div>` : ''}
       </div>`;
   };
+  if (amountInput.value) amountInput.oninput();
 }
 
 function showLPForm(container) {
@@ -381,7 +383,8 @@ function showLPForm(container) {
 
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  container.querySelector('#lp-amount').oninput = function () {
+  const lpAmountInput = container.querySelector('#lp-amount');
+  lpAmountInput.oninput = function () {
     const totalPi = parseFloat(this.value);
     const preview = container.querySelector('#lp-preview');
     if (!totalPi || totalPi <= 0) { preview.classList.add('hidden'); return; }
@@ -404,4 +407,5 @@ function showLPForm(container) {
         </div>
       </div>`;
   };
+  if (lpAmountInput.value) lpAmountInput.oninput();
 }
