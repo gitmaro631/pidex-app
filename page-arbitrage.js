@@ -38,7 +38,7 @@ export function renderArbitrage(container) {
           <div class="form-group">
             <label class="form-label">최소 유동성 <span class="en">Min Liquidity</span></label>
             <div class="input-unit-row">
-              <input type="number" class="form-input" id="arb-liquidity" value="1000" min="0" step="100" />
+              <input type="number" class="form-input" id="arb-liquidity" value="100" min="0" step="100" />
               <span class="unit-label">Pi</span>
             </div>
             <p class="form-hint">풀 양쪽 중 작은 쪽 기준으로 필터</p>
