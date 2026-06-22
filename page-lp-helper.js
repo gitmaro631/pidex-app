@@ -354,8 +354,8 @@ function showNewPoolForm(container, pair) {
         </div>` : ''}
         ${canA && canB ? `
         <div class="stat-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;">
-          <span class="stat-label">예치 비율 <span class="en">Ratio</span></span>
-          <span class="stat-value">${pair.nameA} ${pctA}% / ${pair.nameB} ${pctB}%</span>
+          <span class="stat-label">Pi 수량 배분 <span class="en-tag">${pair.nameA} / ${pair.nameB}</span></span>
+          <span class="stat-value">${piForA.toFixed(4)} Pi / ${piForB.toFixed(4)} Pi</span>
         </div>` : ''}
       </div>`;
   };
