@@ -5,6 +5,7 @@ import { renderArbitrage }    from './page-arbitrage.js';
 import { renderSwap }         from './page-swap.js';
 import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
+import { t, getLang, setLang } from './i18n.js';
 
 export function showLoading(msg = '처리 중...') {
   document.getElementById('loading-msg').textContent = msg;
@@ -21,6 +22,35 @@ export function showToast(msg, type = '') {
   el.className = `toast ${type}`;
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+const NAV_KEYS = ['dex','lp','arb','swap','wallet','info'];
+
+export function updateNavLabels() {
+  document.querySelectorAll('.nav-tab').forEach((btn, i) => {
+    const key = NAV_KEYS[i];
+    const labelEl = btn.querySelector('.nav-label-main');
+    if (labelEl) labelEl.textContent = t(`nav_${key}`);
+  });
+  const badge = document.getElementById('header-sub-badge');
+  if (badge && !badge.classList.contains('hidden')) badge.textContent = t('sub_active');
+}
+
+export function switchLang(lang) {
+  setLang(lang);
+  updateNavLabels();
+  renderLangSwitch();
+  renderedPages.clear();
+  switchPage(activePage);
+}
+
+function renderLangSwitch() {
+  const el = document.getElementById('lang-switch');
+  if (!el) return;
+  const cur = getLang();
+  el.innerHTML = ['ko','en','id'].map(l =>
+    `<button class="lang-btn${cur === l ? ' active' : ''}" onclick="window._switchLang('${l}')">${l.toUpperCase()}</button>`
+  ).join('');
 }
 
 let activePage = 'dashboard';
@@ -63,7 +93,7 @@ function switchPage(pageKey) {
 }
 
 async function doLogin() {
-  showLoading('Pi 지갑 연결 중...');
+  showLoading(t('connecting'));
   try {
     const auth = await authenticate();
     document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
@@ -71,17 +101,20 @@ async function doLogin() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     hideLoading();
+    updateNavLabels();
+    renderLangSwitch();
     if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
     switchPage('dashboard');
   } catch (e) {
     hideLoading();
-    showToast('로그인 실패. Pi Browser에서 실행해주세요.', 'error');
+    showToast(t('login_fail'), 'error');
     console.error(e);
   }
 }
 
 async function init() {
   initPiSDK();
+  window._switchLang = switchLang;
 
   document.querySelectorAll('.nav-tab').forEach(btn => {
     btn.addEventListener('click', () => switchPage(btn.dataset.page));

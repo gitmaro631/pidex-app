@@ -1,6 +1,7 @@
 import { fetchPools, fetchRecommendedFee } from './horizon.js';
 import { formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading } from './app.js';
+import { t } from './i18n.js';
 
 function setupPullToRefresh(container, onRefresh) {
   const scrollEl = document.querySelector('.page-container');
@@ -13,7 +14,7 @@ function setupPullToRefresh(container, onRefresh) {
   if (!indicator) {
     indicator = document.createElement('div');
     indicator.className = 'ptr-indicator';
-    indicator.innerHTML = '<span class="ptr-arrow">↓</span><span class="ptr-text">당겨서 새로고침 Pull to refresh</span>';
+    indicator.innerHTML = `<span class="ptr-arrow">↓</span><span class="ptr-text">${t('ptr_pull')}</span>`;
     container.prepend(indicator);
   }
 
@@ -58,15 +59,15 @@ function setupPullToRefresh(container, onRefresh) {
 export async function renderDashboard(container) {
   container.innerHTML = `
     <div class="page-content">
-      <h2 class="page-title">PiDEX 현황 <span class="en">Network Overview</span></h2>
-      <div class="dash-loading">풀 데이터 로드 중... Loading pool data...</div>
+      <h2 class="page-title">${t('dash_title')}</h2>
+      <div class="dash-loading">${t('dash_loading')}</div>
     </div>
   `;
 
   setupPullToRefresh(container, () => renderDashboard(container));
 
   try {
-    showLoading('PiDEX 데이터 로드 중...');
+    showLoading(t('loading_pidex'));
     const [pools, gasFee] = await Promise.all([fetchPools(), fetchRecommendedFee()]);
     hideLoading();
 
@@ -85,41 +86,41 @@ export async function renderDashboard(container) {
     ).slice(0, 10);
 
     container.querySelector('.page-content').innerHTML = `
-      <h2 class="page-title">PiDEX 현황 <span class="en">Network Overview</span></h2>
+      <h2 class="page-title">${t('dash_title')}</h2>
 
-      <div class="dash-section-title">네트워크 <span class="en">Network</span></div>
+      <div class="dash-section-title">${t('dash_network')}</div>
       <div class="dash-grid">
         <div class="dash-stat-card">
           <div class="dash-stat-val">${pools.length.toLocaleString()}</div>
-          <div class="dash-stat-label">총 풀 수 <span class="en">Total Pools</span></div>
+          <div class="dash-stat-label">${t('dash_total_pools')}</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${piPools.length.toLocaleString()}</div>
-          <div class="dash-stat-label">Pi 포함 풀 <span class="en">Pi Pairs</span></div>
+          <div class="dash-stat-label">${t('dash_pi_pairs')}</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${uniqueTokens.toLocaleString()}</div>
-          <div class="dash-stat-label">고유 토큰 <span class="en">Unique Tokens</span></div>
+          <div class="dash-stat-label">${t('dash_tokens')}</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${avgFee}%</div>
-          <div class="dash-stat-label">AMM 수수료 <span class="en">Avg AMM Fee</span></div>
+          <div class="dash-stat-label">${t('dash_amm_fee')}</div>
         </div>
       </div>
 
-      <div class="dash-section-title">유동성 <span class="en">Liquidity</span></div>
+      <div class="dash-section-title">${t('dash_liquidity')}</div>
       <div class="dash-grid dash-grid-2">
         <div class="dash-stat-card">
           <div class="dash-stat-val">${formatLargeNum(totalLiq)}</div>
-          <div class="dash-stat-label">전체 유동성 합산 <span class="en">Total Liquidity</span></div>
+          <div class="dash-stat-label">${t('dash_total_liq')}</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-val">${(gasFee / 10000000).toFixed(5)} Pi</div>
-          <div class="dash-stat-label">권장 가스비 <span class="en">Recommended Gas</span></div>
+          <div class="dash-stat-label">${t('dash_gas')}</div>
         </div>
       </div>
       <div class="card dash-rank-card">
-        <div class="card-title">유동성 상위 풀 <span class="en">Top Pools by Liquidity</span></div>
+        <div class="card-title">${t('dash_top_pools')}</div>
         ${topLiq.map((p, i) => `
           <div class="rank-row">
             <span class="rank-num">${i + 1}</span>
@@ -128,14 +129,14 @@ export async function renderDashboard(container) {
           </div>`).join('')}
       </div>
 
-      <p class="dash-updated">데이터 기준 시각: ${new Date().toLocaleTimeString()} <span class="en">as of</span></p>
+      <p class="dash-updated">${t('dash_updated')}: ${new Date().toLocaleTimeString()}</p>
     `;
 
 
   } catch (e) {
     container.querySelector('.page-content').innerHTML = `
-      <h2 class="page-title">PiDEX 현황 <span class="en">Network Overview</span></h2>
-      <div class="card"><p class="empty-msg" style="color:var(--red)">데이터 로드 실패: ${e.message}</p></div>
+      <h2 class="page-title">${t('dash_title')}</h2>
+      <div class="card"><p class="empty-msg" style="color:var(--red)">${t('dash_fail')}: ${e.message}</p></div>
     `;
   } finally {
     hideLoading();

@@ -1,6 +1,7 @@
 import { fetchPools } from './horizon.js';
 import { calcLPRatio } from './amm.js';
 import { formatToken, formatLargeNum } from './util-format.js';
+import { t } from './i18n.js';
 
 let allPools     = [];
 let selectedPool = null;
@@ -45,33 +46,27 @@ export async function renderLPHelper(container) {
   container.innerHTML = `
     <div class="lp-wrapper">
       <div class="lp-sticky">
-        <h2 class="page-title" style="margin-bottom:10px;">LP 계산기 <span class="en">LP Calculator</span></h2>
+        <h2 class="page-title" style="margin-bottom:10px;">${t('lp_title')}</h2>
         <div class="search-row">
           <input type="text" class="form-input" id="lp-search"
-            placeholder="코인 검색 Search token (예: USDT)" style="flex:1;" />
+            placeholder="${t('lp_search_ph')}" style="flex:1;" />
           <button class="btn-outline btn-sm" id="btn-search-clear" style="width:auto;padding:0 12px;">✕</button>
         </div>
         <div class="lp-filter-row">
-          <span class="sort-badge">유동성 높음 <span class="en-tag">Liquidity</span></span>
-          <button class="toggle-btn ${piOnly  ? 'active' : ''}" id="btn-pi-only">
-            파이포함만<br><span class="en-tab">Pi Pairs</span>
-          </button>
-          <button class="toggle-btn ${piFirst ? 'active' : ''}" id="btn-pi-first">
-            파이우선<br><span class="en-tab">Pi First</span>
-          </button>
-          <button class="toggle-btn ${newPool ? 'active' : ''}" id="btn-new-pool">
-            새풀<br><span class="en-tab">New Pool</span>
-          </button>
+          <span class="sort-badge">${t('lp_sort_liq')}</span>
+          <button class="toggle-btn ${piOnly  ? 'active' : ''}" id="btn-pi-only">${t('lp_pi_only')}</button>
+          <button class="toggle-btn ${piFirst ? 'active' : ''}" id="btn-pi-first">${t('lp_pi_first')}</button>
+          <button class="toggle-btn ${newPool ? 'active' : ''}" id="btn-new-pool">${t('lp_new_pool')}</button>
         </div>
       </div>
 
       <div class="pool-scroll-frame" id="pool-scroll">
         <div id="pool-list"></div>
         <div id="lp-form" class="card hidden" style="margin:10px 0 0;">
-          <div class="card-title" id="lp-pool-name">선택된 풀</div>
+          <div class="card-title" id="lp-pool-name">${t('lp_selected')}</div>
           <div id="lp-pool-info" style="font-size:12px;color:var(--text2);margin-bottom:12px;"></div>
           <div class="form-group">
-            <label class="form-label">투입할 총 Pi <span class="en">Total Pi to Deposit</span></label>
+            <label class="form-label">${t('lp_deposit_pi')}</label>
             <div class="input-unit-row">
               <input type="number" class="form-input" id="lp-amount" placeholder="e.g. 100" min="0" step="1" />
               <span class="unit-label">Pi</span>
@@ -123,14 +118,14 @@ export async function renderLPHelper(container) {
   });
 
   container.querySelector('#pool-list').innerHTML =
-    '<p style="color:var(--text2);text-align:center;padding:24px;">풀 목록 불러오는 중...</p>';
+    `<p style="color:var(--text2);text-align:center;padding:24px;">${t('lp_loading')}</p>`;
 
   try {
     allPools = await fetchPools(2000);
     renderPoolList(container);
   } catch {
     container.querySelector('#pool-list').innerHTML =
-      '<p style="color:var(--red);text-align:center;padding:24px;">풀 목록 조회 실패</p>';
+      `<p style="color:var(--red);text-align:center;padding:24px;">${t('lp_load_fail')}</p>`;
   }
 }
 
@@ -184,7 +179,7 @@ function renderPoolList(container) {
   renderPageBar(container, total, totalPages);
 
   if (pools.length === 0) {
-    list.innerHTML = '<p style="color:var(--text2);text-align:center;padding:24px;">조건에 맞는 풀 없음</p>';
+    list.innerHTML = `<p style="color:var(--text2);text-align:center;padding:24px;">${t('lp_no_pools')}</p>`;
     return;
   }
 
@@ -226,19 +221,19 @@ function renderNewPoolList(container) {
   renderPageBar(container, total, totalPages);
 
   if (page.length === 0) {
-    list.innerHTML = '<p style="color:var(--text2);text-align:center;padding:24px;">조건에 맞는 새풀 조합 없음</p>';
+    list.innerHTML = `<p style="color:var(--text2);text-align:center;padding:24px;">${t('lp_no_new')}</p>`;
     return;
   }
 
   list.innerHTML = `
     <p style="color:var(--text2);font-size:12px;padding:8px 4px 4px;">
-      아직 풀이 없는 토큰 조합 <span class="en">Pairs without a pool</span> — ${total.toLocaleString()}개
+      ${t('lp_new_title')} — ${total.toLocaleString()}
     </p>
     ${page.map((p, i) => `
       <div class="pool-card new-pool-card" data-pair-idx="${i}">
         <div class="pool-name">${p.nameA} / ${p.nameB}</div>
         <div class="pool-reserves" style="color:var(--accent);font-size:12px;">
-          풀 없음 · No pool exists
+          ${t('lp_no_pool_tag')}
         </div>
       </div>`).join('')}`;
 
@@ -291,16 +286,16 @@ function showNewPoolForm(container, pair) {
   const priceInfo = (name, price) =>
     price !== null
       ? `1 ${name} ≈ <strong>${price.toFixed(4)} Pi</strong>`
-      : `<span style="color:var(--text2);">1 ${name} — Pi 시세 정보 없음</span>`;
+      : `<span style="color:var(--text2);">1 ${name} — ${t('lp_no_pi_price')}</span>`;
 
-  container.querySelector('#lp-pool-name').textContent = `${pair.nameA} / ${pair.nameB} 새 풀`;
+  container.querySelector('#lp-pool-name').textContent = `${pair.nameA} / ${pair.nameB} ${t('lp_new_pool_label')}`;
   container.querySelector('#lp-pool-info').innerHTML = `
     <div class="pool-info-row" style="margin-bottom:4px;">
       <span>${priceInfo(pair.nameA, priceA)}</span>
       <span>${priceInfo(pair.nameB, priceB)}</span>
     </div>
     <p style="color:var(--yellow);font-size:11px;margin-top:4px;">
-      ※ 초기 예치 비율이 곧 시작 가격이 됩니다. 아래는 현재 Pi 시세 기준 추천 비율입니다.
+      ※ ${t('lp_initial_note')}
     </p>`;
 
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -316,7 +311,7 @@ function showNewPoolForm(container, pair) {
 
     if (!canA && !canB) {
       preview.classList.remove('hidden');
-      preview.innerHTML = `<p style="color:var(--text2);font-size:12px;padding:8px 0;">두 토큰 모두 Pi 시세 정보가 없어 계산할 수 없습니다.</p>`;
+      preview.innerHTML = `<p style="color:var(--text2);font-size:12px;padding:8px 0;">${t('lp_no_calc')}</p>`;
       return;
     }
 
@@ -342,7 +337,7 @@ function showNewPoolForm(container, pair) {
     preview.classList.remove('hidden');
     preview.innerHTML = `
       <div class="card" style="background:var(--bg3);margin:8px 0 0;">
-        <div class="card-title">예치 미리보기 <span class="en">Deposit Preview</span></div>
+        <div class="card-title">${t('lp_preview')}</div>
         ${amountA !== null ? `
         <div class="stat-row">
           <span class="stat-label">${pair.nameA} <span style="color:var(--accent);font-size:11px;">${pctA}%</span></span>
@@ -355,7 +350,7 @@ function showNewPoolForm(container, pair) {
         </div>` : ''}
         ${canA && canB ? `
         <div class="stat-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;">
-          <span class="stat-label">수량 비율 <span class="en">Token Ratio</span></span>
+          <span class="stat-label">${t('lp_token_ratio')}</span>
           <span class="stat-value">1 ${pair.nameA} : ${(amountB / amountA).toFixed(4)} ${pair.nameB}</span>
         </div>` : ''}
       </div>`;
@@ -367,7 +362,7 @@ function showLPForm(container) {
   const form = container.querySelector('#lp-form');
   form.classList.remove('hidden');
   container.querySelector('#lp-pool-name').textContent =
-    `${selectedPool.assetA} / ${selectedPool.assetB} 풀`;
+    `${selectedPool.assetA} / ${selectedPool.assetB} ${t('lp_pool_label')}`;
 
   const ratio = (selectedPool.reserveA / selectedPool.reserveB).toFixed(4);
   container.querySelector('#lp-pool-info').innerHTML = `
@@ -376,8 +371,8 @@ function showLPForm(container) {
       <span>${selectedPool.assetB}: <strong>${formatLargeNum(selectedPool.reserveB)}</strong></span>
     </div>
     <div class="pool-info-row" style="margin-top:4px;">
-      <span>비율: 1 ${selectedPool.assetA} = ${ratio} ${selectedPool.assetB}</span>
-      <span>수수료: ${(selectedPool.fee_bp / 100).toFixed(2)}%</span>
+      <span>${t('lp_pool_ratio')}: 1 ${selectedPool.assetA} = ${ratio} ${selectedPool.assetB}</span>
+      <span>${t('lp_pool_fee')}: ${(selectedPool.fee_bp / 100).toFixed(2)}%</span>
     </div>
   `;
 
@@ -392,7 +387,7 @@ function showLPForm(container) {
     preview.classList.remove('hidden');
     preview.innerHTML = `
       <div class="card" style="background:var(--bg3);margin:8px 0 0;">
-        <div class="card-title">예치 미리보기 <span class="en">Preview</span></div>
+        <div class="card-title">${t('lp_preview')}</div>
         <div class="stat-row">
           <span class="stat-label">${selectedPool.assetA}</span>
           <span class="stat-value">${formatToken(amountA, selectedPool.assetA)}</span>
@@ -402,7 +397,7 @@ function showLPForm(container) {
           <span class="stat-value">${formatToken(amountB, selectedPool.assetB)}</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">비율 <span class="en">Ratio</span></span>
+          <span class="stat-label">${t('lp_ratio_label')}</span>
           <span class="stat-value">${(ratioA*100).toFixed(1)}% / ${(ratioB*100).toFixed(1)}%</span>
         </div>
       </div>`;
