@@ -40,6 +40,7 @@ export function switchLang(lang) {
   setLang(lang);
   updateNavLabels();
   renderLangSwitch();
+  renderHeaderButtons();
   renderedPages.clear();
   switchPage(activePage);
 }
@@ -127,6 +128,7 @@ async function doLogin() {
     hideLoading();
     updateNavLabels();
     renderLangSwitch();
+    renderHeaderButtons();
     if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
     switchPage('dashboard');
   } catch (e) {
@@ -136,10 +138,37 @@ async function doLogin() {
   }
 }
 
+function renderHeaderButtons() {
+  const el = document.getElementById('header-buttons');
+  if (!el) return;
+  el.innerHTML = `
+    <button class="header-icon-btn" onclick="window._toggleInfo()">ℹ️ ${t('btn_info')}</button>
+    <button class="header-icon-btn" onclick="window._toggleUtils()">🔗 ${t('btn_utils')}</button>
+  `;
+}
+
+function renderUtilsOverlay() {
+  const panel = document.getElementById('utils-panel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="utils-header">
+      <span class="utils-title">🔗 ${t('utils_title')}</span>
+      <button class="utils-close-btn" onclick="window._toggleUtils()">${t('btn_close')}</button>
+    </div>
+    <div class="utils-empty">${t('utils_soon')}</div>
+  `;
+}
+
 async function init() {
   initPiSDK();
   window._switchLang = switchLang;
   window._toggleLangMenu = () => document.getElementById('lang-menu')?.classList.toggle('open');
+  window._toggleInfo  = () => switchPage('sub');
+  window._toggleUtils = () => {
+    const overlay = document.getElementById('utils-overlay');
+    overlay.classList.toggle('hidden');
+    if (!overlay.classList.contains('hidden')) renderUtilsOverlay();
+  };
   document.addEventListener('click', e => {
     if (!e.target.closest('.lang-dropdown')) document.getElementById('lang-menu')?.classList.remove('open');
   });

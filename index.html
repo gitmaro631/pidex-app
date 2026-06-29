@@ -22,6 +22,7 @@
     <header class="app-header">
       <span class="header-title">PiDEX Util</span>
       <div class="header-right">
+        <div id="header-buttons"></div>
         <span id="header-sub-badge" class="sub-badge hidden">구독중</span>
         <div id="lang-switch"></div>
         <span id="header-username" class="header-user">-</span>
@@ -58,7 +59,7 @@
         <span class="nav-icon">👛</span>
         <span class="nav-label"><span class="nav-label-main">지갑</span></span>
       </button>
-      <button class="nav-tab" data-page="sub">
+      <button class="nav-tab nav-tab-hidden" data-page="sub">
         <span class="nav-icon">ℹ️</span>
         <span class="nav-label"><span class="nav-label-main">정보</span></span>
       </button>
@@ -68,6 +69,10 @@
   <div id="loading-overlay" class="loading-overlay hidden">
     <div class="spinner"></div>
     <p id="loading-msg">처리 중...</p>
+  </div>
+
+  <div id="utils-overlay" class="utils-overlay hidden">
+    <div id="utils-panel"></div>
   </div>
 
   <div id="toast" class="toast hidden"></div>

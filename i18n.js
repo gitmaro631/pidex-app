@@ -18,6 +18,11 @@ const STRINGS = {
   nav_swap:         { ko:'스왑',   en:'Swap',      id:'Swap',      zh:'兑换',   ja:'スワップ',    es:'Swap',     vi:'Swap',     hi:'स्वैप',      pt:'Swap',      tl:'Swap',      fr:'Swap' },
   nav_wallet:       { ko:'지갑',   en:'Wallet',    id:'Dompet',    zh:'钱包',   ja:'ウォレット',  es:'Cartera',  vi:'Ví',       hi:'वॉलेट',      pt:'Carteira',  tl:'Wallet',    fr:'Portefeuille' },
   nav_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },
+  btn_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },
+  btn_utils:        { ko:'유틸 모음', en:'My Apps', id:'Aplikasi', zh:'工具合集', ja:'アプリ一覧', es:'Mis Apps', vi:'Ứng dụng', hi:'मेरे ऐप्स', pt:'Meus Apps', tl:'Mga App',  fr:'Mes Apps' },
+  utils_title:      { ko:'유틸 모음', en:'My Utilities', id:'Utilitas Saya', zh:'我的工具集', ja:'マイユーティリティ', es:'Mis Utilidades', vi:'Tiện ích của tôi', hi:'मेरे उपकरण', pt:'Minhas Utilidades', tl:'Aking Mga Utility', fr:'Mes Utilitaires' },
+  utils_soon:       { ko:'유틸 목록이 곧 추가됩니다 :)', en:'More utilities coming soon :)', id:'Utilitas lainnya segera hadir :)', zh:'更多工具即将推出 :)', ja:'他のユーティリティが近日公開 :)', es:'Más utilidades próximamente :)', vi:'Thêm tiện ích sắp ra mắt :)', hi:'और उपकरण जल्द आ रहे हैं :)', pt:'Mais utilitários em breve :)', tl:'Mas maraming utility ang darating :)', fr:"Plus d'utilitaires bientôt :)" },
+  btn_close:        { ko:'닫기',   en:'Close',     id:'Tutup',     zh:'关闭',   ja:'閉じる',      es:'Cerrar',   vi:'Đóng',      hi:'बंद करें',  pt:'Fechar',    tl:'Isara',     fr:'Fermer' },
 
   // ── Pull to refresh ──
   ptr_pull:         { ko:'당겨서 새로고침', en:'Pull to refresh', id:'Tarik untuk refresh', zh:'下拉刷新', ja:'引いて更新', es:'Desliza para actualizar', vi:'Kéo xuống để làm mới', hi:'खींचकर ताज़ा करें', pt:'Puxe para atualizar', tl:'I-pull para i-refresh', fr:'Tirer pour actualiser' },
