@@ -44,15 +44,37 @@ export function switchLang(lang) {
   switchPage(activePage);
 }
 
-const _LANG_LABELS = { ko:'한', en:'EN', id:'ID', zh:'中', ja:'日', es:'ES', vi:'VI', hi:'हि', pt:'PT', tl:'TL', fr:'FR' };
+const _LANG_META = {
+  ko: { flag: '🇰🇷', name: '한국어' },
+  en: { flag: '🇺🇸', name: 'English' },
+  id: { flag: '🇮🇩', name: 'Indonesia' },
+  zh: { flag: '🇨🇳', name: '中文' },
+  ja: { flag: '🇯🇵', name: '日本語' },
+  es: { flag: '🇪🇸', name: 'Español' },
+  vi: { flag: '🇻🇳', name: 'Tiếng Việt' },
+  hi: { flag: '🇮🇳', name: 'हिन्दी' },
+  pt: { flag: '🇧🇷', name: 'Português' },
+  tl: { flag: '🇵🇭', name: 'Filipino' },
+  fr: { flag: '🇫🇷', name: 'Français' },
+};
 
 function renderLangSwitch() {
   const el = document.getElementById('lang-switch');
   if (!el) return;
   const cur = getLang();
-  el.innerHTML = Object.keys(_LANG_LABELS).map(l =>
-    `<button class="lang-btn${cur === l ? ' active' : ''}" onclick="window._switchLang('${l}')">${_LANG_LABELS[l]}</button>`
-  ).join('');
+  const m = _LANG_META[cur] || _LANG_META.en;
+  el.innerHTML = `<div class="lang-dropdown">
+    <button class="lang-selected" onclick="window._toggleLangMenu()">
+      <span class="lang-flag">${m.flag}</span><span>${m.name}</span><span class="lang-arrow">▾</span>
+    </button>
+    <div class="lang-menu" id="lang-menu">
+      ${Object.keys(_LANG_META).map(l => {
+        const lm = _LANG_META[l];
+        return `<div class="lang-option${l === cur ? ' active' : ''}" onclick="window._switchLang('${l}')">
+          <span class="lang-flag">${lm.flag}</span><span>${lm.name}</span></div>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 
 let activePage = 'dashboard';
@@ -117,6 +139,10 @@ async function doLogin() {
 async function init() {
   initPiSDK();
   window._switchLang = switchLang;
+  window._toggleLangMenu = () => document.getElementById('lang-menu')?.classList.toggle('open');
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.lang-dropdown')) document.getElementById('lang-menu')?.classList.remove('open');
+  });
 
   document.querySelectorAll('.nav-tab').forEach(btn => {
     btn.addEventListener('click', () => switchPage(btn.dataset.page));
