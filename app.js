@@ -44,12 +44,14 @@ export function switchLang(lang) {
   switchPage(activePage);
 }
 
+const _LANG_LABELS = { ko:'한', en:'EN', id:'ID', zh:'中', ja:'日', es:'ES', vi:'VI', hi:'हि', pt:'PT', tl:'TL', fr:'FR' };
+
 function renderLangSwitch() {
   const el = document.getElementById('lang-switch');
   if (!el) return;
   const cur = getLang();
-  el.innerHTML = ['ko','en','id'].map(l =>
-    `<button class="lang-btn${cur === l ? ' active' : ''}" onclick="window._switchLang('${l}')">${l.toUpperCase()}</button>`
+  el.innerHTML = Object.keys(_LANG_LABELS).map(l =>
+    `<button class="lang-btn${cur === l ? ' active' : ''}" onclick="window._switchLang('${l}')">${_LANG_LABELS[l]}</button>`
   ).join('');
 }
 
