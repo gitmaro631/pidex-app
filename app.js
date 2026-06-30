@@ -194,7 +194,7 @@ function renderUtilsOverlay() {
           <span class="util-tag">AMM</span>
           <span class="util-tag">자동 최적화</span>
         </div>
-        <div class="util-card-desc">마켓메이킹 전략 백테스트 시뮬레이터. Stellar 메인넷과 Pi DEX 에서 실제 거래 데이터를 기반으로 전략을 검증하세요.</div>
+        <div class="util-card-desc">마켓메이킹 전략 백테스트 시뮬레이터.<br><span class="util-card-desc-en">Market making strategy backtest simulator.</span><br>Stellar 메인넷과 Pi DEX에서 실제 거래 데이터로 전략을 검증하세요.<br><span class="util-card-desc-en">Verify your strategy with real trade data on Stellar Mainnet &amp; Pi DEX.</span></div>
         <div class="util-card-link">Pi Browser로 열기 →</div>
       </div>
     </a>
