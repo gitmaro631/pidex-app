@@ -146,8 +146,8 @@ function renderHeaderButtons() {
   const el = document.getElementById('header-buttons');
   if (!el) return;
   el.innerHTML = `
-    <button class="header-icon-btn" onclick="window._toggleInfo()">ℹ️ ${t('btn_info')}</button>
-    <button class="header-icon-btn" onclick="window._toggleUtils()">🔗 ${t('btn_utils')}</button>
+    <button class="btn-header-action" onclick="window._toggleInfo()">ℹ️ ${t('btn_info')}</button>
+    <button class="btn-header-action" onclick="window._toggleUtils()">🔗 ${t('btn_utils')}</button>
   `;
 }
 
