@@ -118,22 +118,26 @@ function switchPage(pageKey) {
 }
 
 async function doLogin() {
-  showLoading(t('connecting'));
+  const btn    = document.getElementById('btn-login');
+  const errEl  = document.getElementById('login-error');
+  btn.disabled = true;
+  btn.innerHTML = '연결 중... / Connecting...';
+  if (errEl) errEl.style.display = 'none';
   try {
     const auth = await authenticate();
     document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
 
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
-    hideLoading();
     updateNavLabels();
     renderLangSwitch();
     renderHeaderButtons();
     if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
     switchPage('dashboard');
   } catch (e) {
-    hideLoading();
-    showToast(t('login_fail'), 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'PiDEX 시작하기<br><span class="login-btn-en">Start PiDEX Util</span>';
+    if (errEl) { errEl.textContent = '연결 실패. 다시 시도해주세요. / Connection failed.'; errEl.style.display = 'block'; }
     console.error(e);
   }
 }
