@@ -251,6 +251,36 @@ select.form-input { appearance: none; }
   border-radius: 12px;
   margin-top: 12px;
 }
+
+/* ── 유틸 앱 카드 ── */
+.util-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s;
+}
+.util-card:hover { border-color: var(--accent); }
+.util-card-icon { flex-shrink: 0; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.util-card-body { flex: 1; min-width: 0; }
+.util-card-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.util-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.util-tag {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  padding: 2px 7px;
+}
+.util-card-desc { font-size: 0.8rem; color: var(--text2); line-height: 1.55; margin-bottom: 10px; }
+.util-card-link { font-size: 0.8rem; color: var(--accent2); font-weight: 600; }
 .en-tab  { font-size: 9px; opacity: .7; }
 .en-tag  { font-size: 10px; color: var(--text2); }
 .filter-hint { font-size: 11px; color: var(--text2); margin-bottom: 10px; min-height: 16px; }
