@@ -434,6 +434,16 @@ select.form-input { appearance: none; }
 .yt-sub           { font-size: 11px; opacity: .85; }
 .yt-arrow         { font-size: 20px; opacity: .7; }
 
+/* ── 후원 카드 ── */
+.donation-card    { margin-top: 20px; }
+.donation-btns    { display: flex; gap: 8px; margin: 12px 0 8px; }
+.donation-btn     { flex: 1; padding: 10px 0; border-radius: 10px; border: 1px solid var(--primary); background: rgba(123,94,167,0.12); color: var(--primary); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.donation-btn:hover:not(:disabled) { background: rgba(123,94,167,0.28); }
+.donation-btn:disabled { opacity: 0.5; cursor: default; }
+.donation-result  { font-size: 13px; min-height: 18px; }
+.donation-success { color: var(--green); }
+.donation-error   { color: var(--red); }
+
 /* ── 애니메이션 ── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
 @keyframes spin    { to { transform: rotate(360deg); } }

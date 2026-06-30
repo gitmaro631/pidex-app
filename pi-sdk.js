@@ -16,6 +16,23 @@ function onIncompletePaymentFound(payment) {
   console.warn('미완료 결제 발견:', payment.identifier);
 }
 
+export function createDonation(amount) {
+  if (typeof Pi === 'undefined') {
+    return Promise.reject(new Error('Pi SDK를 찾을 수 없어요. Pi Browser에서 실행해주세요.'));
+  }
+  return new Promise((resolve, reject) => {
+    Pi.createPayment(
+      { amount, memo: `pidex 유틸 후원 ${amount}π`, metadata: { app: 'pidex_util', type: 'donation' } },
+      {
+        onReadyForServerApproval: (paymentId) => { console.log('[Donation] approval:', paymentId); },
+        onReadyForServerCompletion: (paymentId, txid) => { resolve({ paymentId, txid }); },
+        onCancel: () => reject(new Error('cancelled')),
+        onError: (err) => reject(err),
+      }
+    );
+  });
+}
+
 export async function createSubscriptionPayment() {
   return new Promise((resolve, reject) => {
     Pi.createPayment(
