@@ -162,30 +162,7 @@ function renderUtilsOverlay() {
 
     <a class="util-card" href="https://mmstrategylabqge3450.pinet.com/" target="_blank">
       <div class="util-card-icon">
-        <svg width="64" height="64" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
-          <rect width="72" height="72" rx="16" fill="#f8f8f8"/>
-          <path d="M16,47 Q7,25 30,13" stroke="#00BFA5" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <path d="M42,11 Q64,22 60,45" stroke="#7B5EA7" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <path d="M55,58 Q40,68 17,58" stroke="#4A90D9" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <circle cx="36" cy="36" r="14" fill="#F5A623"/>
-          <rect x="28" y="41" width="4" height="5" fill="white" rx="1"/>
-          <rect x="34" y="37" width="4" height="9" fill="white" rx="1"/>
-          <rect x="40" y="32" width="4" height="14" fill="white" rx="1"/>
-          <polyline points="29,39 34,33 40,30 44,27" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="36" cy="11" r="9" fill="#7B5EA7"/>
-          <path d="M29,8 L29,16 Q36,14 36,14 Q36,14 43,16 L43,8 Q36,6 36,6 Q36,6 29,8Z" fill="white" opacity="0.9"/>
-          <line x1="36" y1="6" x2="36" y2="14" stroke="#7B5EA7" stroke-width="1.2"/>
-          <circle cx="61" cy="53" r="9" fill="#4A90D9"/>
-          <line x1="56" y1="50" x2="66" y2="50" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="56" y1="53.5" x2="66" y2="53.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="56" y1="57" x2="66" y2="57" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <circle cx="11" cy="53" r="9" fill="#00BFA5"/>
-          <line x1="11" y1="46" x2="11" y2="60" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <line x1="6" y1="49" x2="16" y2="49" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M6,49 L4.5,54 L7.5,54 Z" fill="white"/>
-          <path d="M16,49 L14.5,54 L17.5,54 Z" fill="white"/>
-          <line x1="8.5" y1="60" x2="13.5" y2="60" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-        </svg>
+        <img src="https://mmstrategylabqge3450.pinet.com/icon.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="MM Strategy Lab">
       </div>
       <div class="util-card-body">
         <div class="util-card-name">MM Strategy Lab</div>
@@ -195,6 +172,22 @@ function renderUtilsOverlay() {
           <span class="util-tag">Auto Optimize</span>
         </div>
         <div class="util-card-desc">마켓메이킹 전략 백테스트 시뮬레이터.<br><span class="util-card-desc-en">Market making strategy backtest simulator.</span><br>Stellar 메인넷과 Pi DEX에서 실제 거래 데이터로 전략을 검증하세요.<br><span class="util-card-desc-en">Verify your strategy with real trade data on Stellar Mainnet &amp; Pi DEX.</span></div>
+        <div class="util-card-link">Pi Browser로 열기 →</div>
+      </div>
+    </a>
+
+    <a class="util-card" href="https://quizpisgn2184.pinet.com" target="_blank">
+      <div class="util-card-icon">
+        <img src="https://quizpisgn2184.pinet.com/icon.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="PiDEX Quiz">
+      </div>
+      <div class="util-card-body">
+        <div class="util-card-name">PiDEX Quiz</div>
+        <div class="util-card-tags">
+          <span class="util-tag">DEX Quiz</span>
+          <span class="util-tag">Leaderboard</span>
+          <span class="util-tag">Survey</span>
+        </div>
+        <div class="util-card-desc">Pi DEX 지식 퀴즈 &amp; 글로벌 커뮤니티 설문.<br><span class="util-card-desc-en">Pi DEX knowledge quiz &amp; global community survey.</span></div>
         <div class="util-card-link">Pi Browser로 열기 →</div>
       </div>
     </a>
