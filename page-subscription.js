@@ -151,6 +151,17 @@ export function renderSubscription(container) {
         <p class="contact-desc" style="margin-top:6px;font-size:11px;">${t('info_copy_note')}</p>
       </div>
 
+      <div class="card donation-card">
+        <div class="card-title">${t('donation_title')}</div>
+        <p class="info-desc" style="margin-bottom:4px;">${t('donation_desc')}</p>
+        <div class="donation-btns">
+          <button class="donation-btn" data-amount="1">1π</button>
+          <button class="donation-btn" data-amount="5">5π</button>
+          <button class="donation-btn" data-amount="10">10π</button>
+        </div>
+        <div class="donation-result" id="donation-result"></div>
+      </div>
+
     </div>
   `;
 
@@ -159,6 +170,31 @@ export function renderSubscription(container) {
       const btn = container.querySelector('#btn-copy-yt');
       btn.textContent = t('info_copied');
       setTimeout(() => { btn.textContent = t('info_copy'); }, 2000);
+    });
+  });
+
+  container.querySelectorAll('.donation-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const amount = Number(btn.dataset.amount);
+      const resultEl = container.querySelector('#donation-result');
+      const allBtns = container.querySelectorAll('.donation-btn');
+      allBtns.forEach(b => { b.disabled = true; });
+      resultEl.textContent = '';
+      resultEl.className = 'donation-result';
+      try {
+        await createDonation(amount);
+        resultEl.textContent = `✓ ${amount}π`;
+        resultEl.classList.add('donation-success');
+      } catch (err) {
+        if (err.message === 'cancelled') {
+          resultEl.textContent = '';
+        } else {
+          resultEl.textContent = t('donation_error');
+          resultEl.classList.add('donation-error');
+        }
+      } finally {
+        allBtns.forEach(b => { b.disabled = false; });
+      }
     });
   });
 
