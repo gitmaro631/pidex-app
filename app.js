@@ -128,7 +128,7 @@ async function doLogin() {
     const auth = await authenticate();
     document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
 
-    if (auth.user.wallet_address && !localStorage.getItem('stellar_pub_key')) {
+    if (auth.user.wallet_address) {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
     }
 
