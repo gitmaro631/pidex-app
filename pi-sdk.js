@@ -9,13 +9,26 @@ async function serverApprove(paymentId) {
   if (!res.ok) throw new Error(`approve failed: ${res.status}`);
 }
 
-async function serverComplete(paymentId, txid) {
+async function serverComplete(paymentId, txid, walletAddress) {
   const res = await fetch('/api/payments/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymentId, txid }),
+    body: JSON.stringify({ paymentId, txid, walletAddress }),
   });
   if (!res.ok) throw new Error(`complete failed: ${res.status}`);
+}
+
+async function syncSubscription(walletAddress) {
+  try {
+    const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(walletAddress)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.active && data.expiry) {
+      localStorage.setItem('sub_expiry', data.expiry);
+    } else if (!data.active) {
+      localStorage.removeItem('sub_expiry');
+    }
+  } catch { /* 실패 시 localStorage 그대로 유지 */ }
 }
 
 async function onIncompletePaymentFound(payment) {
@@ -38,7 +51,11 @@ export async function initPiSDK() {
 export async function authenticate() {
   return new Promise((resolve, reject) => {
     Pi.authenticate(['username', 'payments', 'wallet_address'], onIncompletePaymentFound)
-      .then(auth => { currentUser = auth.user; resolve(auth); })
+      .then(async auth => {
+        currentUser = auth.user;
+        if (auth.user?.wallet_address) await syncSubscription(auth.user.wallet_address);
+        resolve(auth);
+      })
       .catch(reject);
   });
 }
@@ -80,7 +97,7 @@ export async function createSubscriptionPayment() {
           try { await serverApprove(paymentId); } catch (err) { reject(err); }
         },
         onReadyForServerCompletion: async (paymentId, txid) => {
-          try { await serverComplete(paymentId, txid); resolve({ paymentId, txid }); } catch (err) { reject(err); }
+          try { await serverComplete(paymentId, txid, currentUser?.wallet_address); resolve({ paymentId, txid }); } catch (err) { reject(err); }
         },
         onCancel: () => reject(new Error('cancelled')),
         onError: (err) => reject(err),
