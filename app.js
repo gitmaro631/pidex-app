@@ -131,8 +131,6 @@ async function doLogin() {
     if (auth.user.wallet_address) {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
     }
-    // 임시 디버그: wallet_address 수신 여부 확인용
-    console.log('[DEBUG] wallet_address:', auth.user.wallet_address ?? 'NULL');
 
     // 구독 뱃지 — syncSubscription 완료 후 localStorage 기준으로 설정
     const badge = document.getElementById('header-sub-badge');
