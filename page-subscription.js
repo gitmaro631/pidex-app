@@ -198,10 +198,26 @@ export function renderSubscription(container) {
       try {
         const wallet = currentUser?.wallet_address;
         if (!wallet) throw new Error('no wallet');
-        const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
-        const data = await res.json();
-        if (data.active && data.expiry) {
-          localStorage.setItem('sub_expiry', data.expiry);
+
+        // 1단계: Redis 확인
+        let status = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`).then(r => r.json());
+
+        // 2단계: Redis에 없고 localStorage에 유효한 이용권이 있으면 → Redis에 업로드
+        if (!status.active) {
+          const localExpiry = localStorage.getItem('sub_expiry');
+          if (localExpiry && new Date(localExpiry) > new Date()) {
+            await fetch('/api/subscription/restore', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ wallet, expiry: localExpiry }),
+            });
+            // 3단계: Redis 재확인
+            status = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`).then(r => r.json());
+          }
+        }
+
+        if (status.active && status.expiry) {
+          localStorage.setItem('sub_expiry', status.expiry);
           resultEl.textContent = t('sub_restore_ok');
           resultEl.classList.add('donation-success');
           window._refreshArbQuota?.();
