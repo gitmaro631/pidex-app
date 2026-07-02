@@ -4,7 +4,8 @@ const KEYS = {
   SUB_EXPIRY:  'sub_expiry',
 };
 
-const FREE_DAILY_LIMIT = 100;
+export const FREE_DAILY_LIMIT = 30;
+export const SUBSCRIBED_DAILY_LIMIT = 100;
 
 export function getDailyArbCount() {
   const today = new Date().toISOString().slice(0, 10);
@@ -23,12 +24,15 @@ export function incrementArbCount() {
 }
 
 export function canUseArbitrage() {
-  if (isSubscribed()) return true;
-  return getDailyArbCount() < FREE_DAILY_LIMIT;
+  const count = getDailyArbCount();
+  if (isSubscribed()) return count < SUBSCRIBED_DAILY_LIMIT;
+  return count < FREE_DAILY_LIMIT;
 }
 
 export function remainingFreeUses() {
-  return Math.max(0, FREE_DAILY_LIMIT - getDailyArbCount());
+  const count = getDailyArbCount();
+  if (isSubscribed()) return Math.max(0, SUBSCRIBED_DAILY_LIMIT - count);
+  return Math.max(0, FREE_DAILY_LIMIT - count);
 }
 
 export function isSubscribed() {

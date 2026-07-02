@@ -1,7 +1,7 @@
 import { fetchPools } from './horizon.js';
 import { findArbitragePaths } from './amm.js';
 import { formatPct, pctClass } from './util-format.js';
-import { canUseArbitrage, incrementArbCount, remainingFreeUses, isSubscribed } from './util-storage.js';
+import { canUseArbitrage, incrementArbCount, remainingFreeUses, isSubscribed, FREE_DAILY_LIMIT, SUBSCRIBED_DAILY_LIMIT } from './util-storage.js';
 import { showLoading, hideLoading, showToast } from './app.js';
 import { t } from './i18n.js';
 
@@ -61,18 +61,23 @@ function updateQuota(container) {
   const quotaEl  = container.querySelector('#arb-quota');
   const scanBtn  = container.querySelector('#arb-scan-btn');
   if (!quotaEl) return;
-  if (isSubscribed()) {
-    quotaEl.innerHTML = `<span class="quota-ok">⭐ ${t('arb_subscribed')}</span>`;
-    scanBtn.disabled = false;
+  const subbed    = isSubscribed();
+  const remaining = remainingFreeUses();
+  const canUse    = remaining > 0;
+  const limit     = subbed ? SUBSCRIBED_DAILY_LIMIT : FREE_DAILY_LIMIT;
+
+  if (subbed) {
+    quotaEl.innerHTML = `<span class="${canUse ? 'quota-ok' : 'quota-over'}">${t('arb_subscribed')}: ${remaining} / ${limit}${!canUse ? ` — ${t('arb_resets')}` : ''}</span>`;
   } else {
-    const remaining = remainingFreeUses();
-    const canUse    = remaining > 0;
-    quotaEl.innerHTML = `<span class="${canUse ? 'quota-ok' : 'quota-over'}">
-      ${t('arb_remaining')}: ${remaining} / 100
-      ${!canUse ? ` — ${t('arb_resets')}` : ''}
-    </span>`;
-    scanBtn.disabled = !canUse;
+    const subPrompt = !canUse
+      ? `<br><button class="btn-link quota-sub-link" id="arb-sub-link" style="font-size:0.8rem;margin-top:4px;">${t('arb_sub_link')}</button>`
+      : '';
+    quotaEl.innerHTML = `<span class="${canUse ? 'quota-ok' : 'quota-over'}">${t('arb_remaining')}: ${remaining} / ${limit}${!canUse ? ` — ${t('arb_resets')}` : ''}</span>${subPrompt}`;
+    if (!canUse) {
+      quotaEl.querySelector('#arb-sub-link')?.addEventListener('click', () => window._toggleInfo?.());
+    }
   }
+  scanBtn.disabled = !canUse;
 }
 
 async function runScan(container) {
