@@ -25,13 +25,13 @@ export function incrementArbCount() {
 
 export function canUseArbitrage() {
   const count = getDailyArbCount();
-  if (isSubscribed()) return count < SUBSCRIBED_DAILY_LIMIT;
+  if (isSubscribed()) return count < FREE_DAILY_LIMIT + SUBSCRIBED_DAILY_LIMIT;
   return count < FREE_DAILY_LIMIT;
 }
 
 export function remainingFreeUses() {
   const count = getDailyArbCount();
-  if (isSubscribed()) return Math.max(0, SUBSCRIBED_DAILY_LIMIT - count);
+  if (isSubscribed()) return Math.max(0, FREE_DAILY_LIMIT + SUBSCRIBED_DAILY_LIMIT - count);
   return Math.max(0, FREE_DAILY_LIMIT - count);
 }
 

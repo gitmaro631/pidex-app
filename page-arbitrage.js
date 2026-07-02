@@ -54,6 +54,7 @@ export function renderArbitrage(container) {
   `;
 
   updateQuota(container);
+  window._refreshArbQuota = () => updateQuota(container);
   container.querySelector('#arb-scan-btn').addEventListener('click', () => runScan(container));
 }
 

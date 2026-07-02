@@ -172,7 +172,8 @@ export function renderSubscription(container) {
         resultEl.classList.add('donation-success');
         const badge = document.getElementById('header-sub-badge');
         if (badge) { badge.textContent = t('sub_active'); badge.classList.remove('hidden'); }
-        setTimeout(() => { subBtn.remove(); }, 2000);
+        window._refreshArbQuota?.();
+        setTimeout(() => renderSubscription(container), 2000);
       } catch (err) {
         if (err.message === 'cancelled') {
           resultEl.textContent = '';
