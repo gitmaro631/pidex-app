@@ -8,8 +8,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: false, reason: 'expired' });
   }
 
-  const url = process.env.STORAGE_URL;
-  const token = process.env.STORAGE_TOKEN;
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return res.status(500).json({ error: 'Redis not configured' });
 
   const ttlSeconds = Math.floor((expiryDate - new Date()) / 1000);

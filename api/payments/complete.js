@@ -23,8 +23,8 @@ export default async function handler(req, res) {
 }
 
 async function saveSubscription(uid) {
-  const url = process.env.STORAGE_URL;
-  const token = process.env.STORAGE_TOKEN;
+  const url = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return;
   const expiry = new Date();
   expiry.setDate(expiry.getDate() + 30);
