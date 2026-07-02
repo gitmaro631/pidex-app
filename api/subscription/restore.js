@@ -13,9 +13,10 @@ export default async function handler(req, res) {
   if (!url || !token) return res.status(500).json({ error: 'Redis not configured' });
 
   const ttlSeconds = Math.floor((expiryDate - new Date()) / 1000);
-  await fetch(`${url}/set/${encodeURIComponent('sub:' + uid)}/${encodeURIComponent(expiry)}?ex=${ttlSeconds}`, {
+  const upstashRes = await fetch(`${url}/set/${encodeURIComponent('sub:' + uid)}/${encodeURIComponent(expiry)}?ex=${ttlSeconds}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (!upstashRes.ok) return res.status(500).json({ error: 'Redis write failed' });
 
   return res.status(200).json({ success: true, expiry });
 }

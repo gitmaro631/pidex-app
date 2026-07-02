@@ -170,6 +170,16 @@ export function renderSubscription(container) {
       try {
         await createSubscriptionPayment();
         setSubscription(1);
+        // complete.js Redis 저장 실패 보완 — 로컬 만료일로 Redis 명시적 동기화
+        const _uid = currentUser?.uid;
+        const _exp = getSubscriptionExpiry();
+        if (_uid && _exp) {
+          fetch('/api/subscription/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: _uid, expiry: _exp }),
+          }).catch(() => {});
+        }
         resultEl.textContent = t('sub_ok');
         resultEl.classList.add('donation-success');
         const badge = document.getElementById('header-sub-badge');
@@ -206,11 +216,12 @@ export function renderSubscription(container) {
         if (!status.active) {
           const localExpiry = localStorage.getItem('sub_expiry');
           if (localExpiry && new Date(localExpiry) > new Date()) {
-            await fetch('/api/subscription/restore', {
+            const restoreRes = await fetch('/api/subscription/restore', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ uid, expiry: localExpiry }),
             });
+            if (!restoreRes.ok) throw new Error('restore_failed');
             // 3단계: Redis 재확인
             status = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
           }
