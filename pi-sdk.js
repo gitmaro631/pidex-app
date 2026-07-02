@@ -82,6 +82,7 @@ export async function authenticate() {
               body: JSON.stringify({ accessToken: auth.accessToken }),
             });
             const d = await r.json();
+            window._debugAuth._server = d._debug ?? d;
             if (d.wallet_address) {
               currentUser = { ...auth.user, wallet_address: d.wallet_address };
               localStorage.setItem('stellar_pub_key', d.wallet_address);
