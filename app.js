@@ -175,6 +175,7 @@ function renderUtilsOverlay() {
       <span class="utils-title">🔗 ${t('utils_title')}</span>
       <button class="utils-close-btn" onclick="window._toggleUtils()">${t('btn_close')}</button>
     </div>
+    <div class="utils-body">
 
     <a class="util-card" href="https://mmstrategylabqge3450.pinet.com/" target="_blank">
       <div class="util-card-icon">
@@ -207,6 +208,7 @@ function renderUtilsOverlay() {
         <div class="util-card-link">Pi Browser로 열기 →</div>
       </div>
     </a>
+    </div>
   `;
 }
 

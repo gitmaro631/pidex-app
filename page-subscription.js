@@ -196,11 +196,11 @@ export function renderSubscription(container) {
       resultEl.textContent = '';
       resultEl.className = 'donation-result';
       try {
-        const wallet = currentUser?.wallet_address;
-        if (!wallet) throw new Error('no wallet');
+        const uid = currentUser?.uid;
+        if (!uid) throw new Error('no uid');
 
         // 1단계: Redis 확인
-        let status = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`).then(r => r.json());
+        let status = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
 
         // 2단계: Redis에 없고 localStorage에 유효한 이용권이 있으면 → Redis에 업로드
         if (!status.active) {
@@ -209,10 +209,10 @@ export function renderSubscription(container) {
             await fetch('/api/subscription/restore', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ wallet, expiry: localExpiry }),
+              body: JSON.stringify({ uid, expiry: localExpiry }),
             });
             // 3단계: Redis 재확인
-            status = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`).then(r => r.json());
+            status = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
           }
         }
 

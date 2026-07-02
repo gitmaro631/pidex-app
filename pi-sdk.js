@@ -9,22 +9,21 @@ async function serverApprove(paymentId) {
   if (!res.ok) throw new Error(`approve failed: ${res.status}`);
 }
 
-async function serverComplete(paymentId, txid, walletAddress) {
+async function serverComplete(paymentId, txid, uid) {
   const res = await fetch('/api/payments/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymentId, txid, walletAddress }),
+    body: JSON.stringify({ paymentId, txid, uid }),
   });
   if (!res.ok) throw new Error(`complete failed: ${res.status}`);
 }
 
-async function syncSubscription(walletAddress) {
+async function syncSubscription(uid) {
   try {
-    const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(walletAddress)}`);
+    const res = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`);
     if (!res.ok) return;
     const data = await res.json();
     if (data.active && data.expiry) {
-      // Redis에 유효한 기록 → localStorage 갱신
       localStorage.setItem('sub_expiry', data.expiry);
     } else if (!data.active) {
       const localExpiry = localStorage.getItem('sub_expiry');
@@ -33,12 +32,11 @@ async function syncSubscription(walletAddress) {
         await fetch('/api/subscription/restore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wallet: walletAddress, expiry: localExpiry }),
+          body: JSON.stringify({ uid, expiry: localExpiry }),
         });
-        const confirm = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(walletAddress)}`).then(r => r.json());
+        const confirm = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
         if (confirm.active && confirm.expiry) localStorage.setItem('sub_expiry', confirm.expiry);
       } else {
-        // 둘 다 없거나 만료 → localStorage 제거
         localStorage.removeItem('sub_expiry');
       }
     }
@@ -68,7 +66,7 @@ export async function authenticate() {
       .then(async auth => {
         currentUser = auth.user;
 
-        // SDK가 wallet_address를 안 주면 서버에서 조회
+        // wallet_address가 없으면 서버에서 조회 (테스트넷 제한)
         if (!auth.user?.wallet_address && auth.accessToken) {
           try {
             const r = await fetch('/api/user/wallet', {
@@ -84,7 +82,9 @@ export async function authenticate() {
           } catch { /* 실패 시 무시 */ }
         }
 
-        if (currentUser?.wallet_address) await syncSubscription(currentUser.wallet_address);
+        // uid는 항상 존재 — uid 기반으로 구독 동기화
+        const uid = currentUser?.uid;
+        if (uid) await syncSubscription(uid);
         resolve(auth);
       })
       .catch(reject);
@@ -128,7 +128,7 @@ export async function createSubscriptionPayment() {
           try { await serverApprove(paymentId); } catch (err) { reject(err); }
         },
         onReadyForServerCompletion: async (paymentId, txid) => {
-          try { await serverComplete(paymentId, txid, currentUser?.wallet_address); resolve({ paymentId, txid }); } catch (err) { reject(err); }
+          try { await serverComplete(paymentId, txid, currentUser?.uid); resolve({ paymentId, txid }); } catch (err) { reject(err); }
         },
         onCancel: () => reject(new Error('cancelled')),
         onError: (err) => reject(err),

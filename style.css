@@ -234,14 +234,27 @@ select.form-input { appearance: none; }
   inset: 0;
   background: var(--bg);
   z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#utils-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+.utils-body {
+  flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 8px 16px 16px;
 }
 .utils-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  padding: 16px 16px 14px;
+  flex-shrink: 0;
 }
 .utils-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
 .utils-close-btn {

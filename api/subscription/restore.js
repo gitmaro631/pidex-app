@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { wallet, expiry } = req.body;
-  if (!wallet || !expiry) return res.status(400).json({ error: 'wallet and expiry required' });
+  const { uid, expiry } = req.body;
+  if (!uid || !expiry) return res.status(400).json({ error: 'uid and expiry required' });
 
   const expiryDate = new Date(expiry);
   if (isNaN(expiryDate.getTime()) || expiryDate <= new Date()) {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (!url || !token) return res.status(500).json({ error: 'Redis not configured' });
 
   const ttlSeconds = Math.floor((expiryDate - new Date()) / 1000);
-  await fetch(`${url}/set/${encodeURIComponent('sub:' + wallet)}/${encodeURIComponent(expiry)}?ex=${ttlSeconds}`, {
+  await fetch(`${url}/set/${encodeURIComponent('sub:' + uid)}/${encodeURIComponent(expiry)}?ex=${ttlSeconds}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
