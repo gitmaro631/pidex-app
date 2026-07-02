@@ -2,6 +2,7 @@ import { showToast } from './app.js';
 import { t } from './i18n.js';
 import { createDonation, createSubscriptionPayment } from './pi-sdk.js';
 import { isSubscribed, setSubscription, getSubscriptionExpiry } from './util-storage.js';
+import { currentUser } from './pi-sdk.js';
 
 const FEATURES = [
   { icon: '📊',
@@ -123,6 +124,7 @@ export function renderSubscription(container) {
             ${t('sub_b3')}
           </div>
           <button class="btn-primary" id="btn-subscribe" style="margin-top:2px;">${t('sub_btn')}</button>
+          <button class="btn-outline" id="btn-restore" style="margin-top:6px;width:100%;font-size:0.85rem;">${t('sub_restore_btn')}</button>
           <div class="donation-result" id="sub-result"></div>
         ` : `<p class="form-hint" style="margin-bottom:0;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>`}
       </div>
@@ -182,6 +184,37 @@ export function renderSubscription(container) {
           resultEl.classList.add('donation-error');
         }
         subBtn.disabled = false;
+      }
+    });
+  }
+
+  const restoreBtn = container.querySelector('#btn-restore');
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', async () => {
+      const resultEl = container.querySelector('#sub-result');
+      restoreBtn.disabled = true;
+      resultEl.textContent = '';
+      resultEl.className = 'donation-result';
+      try {
+        const wallet = currentUser?.wallet_address;
+        if (!wallet) throw new Error('no wallet');
+        const res = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(wallet)}`);
+        const data = await res.json();
+        if (data.active && data.expiry) {
+          localStorage.setItem('sub_expiry', data.expiry);
+          resultEl.textContent = t('sub_restore_ok');
+          resultEl.classList.add('donation-success');
+          window._refreshArbQuota?.();
+          setTimeout(() => renderSubscription(container), 1500);
+        } else {
+          resultEl.textContent = t('sub_restore_none');
+          resultEl.classList.add('donation-error');
+          restoreBtn.disabled = false;
+        }
+      } catch {
+        resultEl.textContent = t('sub_restore_none');
+        resultEl.classList.add('donation-error');
+        restoreBtn.disabled = false;
       }
     });
   }
