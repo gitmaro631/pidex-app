@@ -77,12 +77,15 @@ export async function authenticate() {
               body: JSON.stringify({ accessToken: auth.accessToken }),
             });
             const d = await r.json();
-            if (d.wallet_address) currentUser = { ...auth.user, wallet_address: d.wallet_address };
+            if (d.wallet_address) {
+              currentUser = { ...auth.user, wallet_address: d.wallet_address };
+              localStorage.setItem('stellar_pub_key', d.wallet_address);
+            }
           } catch { /* 실패 시 무시 */ }
         }
 
         if (currentUser?.wallet_address) await syncSubscription(currentUser.wallet_address);
-        resolve({ ...auth, user: currentUser });
+        resolve(auth);
       })
       .catch(reject);
   });
