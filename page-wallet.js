@@ -3,6 +3,7 @@ import { formatPi, formatToken, formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
+import { currentUser } from './pi-sdk.js';
 
 const STORAGE_KEY = 'stellar_pub_key';
 
@@ -50,6 +51,10 @@ function renderChangeAddressDialog(container, onSaved) {
 }
 
 export async function renderWallet(container) {
+  // 로그인된 지갑 주소가 있는데 localStorage가 비어있으면 자동 복구
+  if (!localStorage.getItem(STORAGE_KEY) && currentUser?.wallet_address) {
+    localStorage.setItem(STORAGE_KEY, currentUser.wallet_address);
+  }
   const pubKey = localStorage.getItem(STORAGE_KEY);
 
   container.innerHTML = `
