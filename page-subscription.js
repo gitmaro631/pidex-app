@@ -1,8 +1,6 @@
-import { setWalletTabVisible, showToast } from './app.js';
+import { showToast } from './app.js';
 import { t } from './i18n.js';
 import { createDonation } from './pi-sdk.js';
-
-const PUB_KEY_STORAGE = 'stellar_pub_key';
 
 const FEATURES = [
   { icon: '📊',
@@ -86,7 +84,6 @@ const FEATURES = [
 ];
 
 export function renderSubscription(container) {
-  const savedKey = localStorage.getItem(PUB_KEY_STORAGE) ?? '';
   const lang = localStorage.getItem('pidex_lang') || 'ko';
 
   container.innerHTML = `
@@ -111,27 +108,6 @@ export function renderSubscription(container) {
           <div class="notice-title">${t('info_notice')}</div>
           <div class="notice-desc">${t('info_notice_desc')}</div>
         </div>
-      </div>
-
-      <div class="card pubkey-card">
-        <div class="card-title">${t('info_pubkey')}</div>
-        <p class="info-desc" style="margin-bottom:12px;">${t('info_pubkey_desc').replace(/\n/g, '<br>')}</p>
-        ${savedKey
-          ? `<div class="pubkey-registered">
-               <span class="pubkey-addr">${savedKey.slice(0,10)}...${savedKey.slice(-8)}</span>
-               <span class="badge badge-good">${t('info_registered')}</span>
-             </div>
-             <button class="btn-outline btn-sm" id="btn-remove-pubkey" style="margin-top:10px;color:var(--red);border-color:var(--red);">
-               ${t('info_remove_key')}
-             </button>`
-          : `<div class="key-input-row">
-               <input type="text" class="form-input" id="pubkey-input"
-                 placeholder="${t('info_key_ph')}" style="font-size:12px;" />
-               <button class="btn-primary btn-sm" id="btn-save-pubkey" style="width:auto;white-space:nowrap;">
-                 ${t('info_save_key')}
-               </button>
-             </div>`
-        }
       </div>
 
       <div class="contact-card">
@@ -199,24 +175,4 @@ export function renderSubscription(container) {
   });
 
 
-  if (savedKey) {
-    container.querySelector('#btn-remove-pubkey').addEventListener('click', () => {
-      localStorage.removeItem(PUB_KEY_STORAGE);
-      setWalletTabVisible(false);
-      showToast(t('info_key_removed'), 'success');
-      renderSubscription(container);
-    });
-  } else {
-    container.querySelector('#btn-save-pubkey').addEventListener('click', () => {
-      const val = container.querySelector('#pubkey-input').value.trim();
-      if (!val.startsWith('G') || val.length !== 56) {
-        showToast(t('info_key_invalid'), 'error');
-        return;
-      }
-      localStorage.setItem(PUB_KEY_STORAGE, val);
-      setWalletTabVisible(true);
-      showToast(t('info_key_saved'), 'success');
-      renderSubscription(container);
-    });
-  }
 }

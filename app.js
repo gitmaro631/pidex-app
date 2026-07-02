@@ -127,12 +127,16 @@ async function doLogin() {
     const auth = await authenticate();
     document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
 
+    if (auth.user.wallet_address && !localStorage.getItem('stellar_pub_key')) {
+      localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
+    }
+
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
     updateNavLabels();
     renderLangSwitch();
     renderHeaderButtons();
-    if (localStorage.getItem('stellar_pub_key')) setWalletTabVisible(true);
+    setWalletTabVisible(true);
     switchPage('dashboard');
   } catch (e) {
     btn.disabled = false;

@@ -5,6 +5,49 @@ import { t } from './i18n.js';
 
 const STORAGE_KEY = 'stellar_pub_key';
 
+function renderChangeAddressDialog(container, onSaved) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:360px;">
+      <div class="modal-header">
+        <h2 style="font-size:16px;">${t('wallet_change_title')}</h2>
+        <button class="modal-close" id="btn-addr-cancel">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:rgba(255,160,0,0.12);border:1px solid rgba(255,160,0,0.4);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;line-height:1.6;color:#f0b429;">
+          ${t('wallet_change_warn').replace(/\n/g, '<br>')}
+        </div>
+        <div class="key-input-row" style="display:flex;gap:8px;">
+          <input type="text" class="form-input" id="addr-input"
+            placeholder="${t('wallet_change_ph')}" style="font-size:12px;flex:1;" />
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn-outline btn-sm" id="btn-addr-cancel2" style="flex:1;">${t('wallet_change_cancel')}</button>
+          <button class="btn-primary btn-sm" id="btn-addr-save" style="flex:1;">${t('wallet_change_save')}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector('#btn-addr-cancel').addEventListener('click', close);
+  overlay.querySelector('#btn-addr-cancel2').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  overlay.querySelector('#btn-addr-save').addEventListener('click', () => {
+    const val = overlay.querySelector('#addr-input').value.trim();
+    if (!val.startsWith('G') || val.length !== 56) {
+      overlay.querySelector('#addr-input').style.borderColor = 'var(--red)';
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, val);
+    close();
+    onSaved();
+  });
+}
+
 export async function renderWallet(container) {
   const pubKey = localStorage.getItem(STORAGE_KEY);
 
@@ -12,12 +55,20 @@ export async function renderWallet(container) {
     <div class="page-content">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <h2 class="page-title" style="margin-bottom:0;">${t('wallet_title')}</h2>
-        <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-outline btn-sm" id="btn-wallet-change" style="width:auto;padding:0 10px;font-size:11px;">🔑 ${t('wallet_change_btn')}</button>
+          <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
+        </div>
       </div>
       <div class="wallet-loading">${t('wallet_loading')}</div>
     </div>
   `;
   container.querySelector('#btn-wallet-refresh').addEventListener('click', () => rerenderPage('wallet'));
+  container.querySelector('#btn-wallet-change').addEventListener('click', () => {
+    renderChangeAddressDialog(container, () => {
+      rerenderPage('wallet');
+    });
+  });
 
   if (!pubKey) {
     container.querySelector('.wallet-loading').textContent = t('wallet_no_key');
