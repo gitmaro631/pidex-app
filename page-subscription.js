@@ -113,14 +113,18 @@ export function renderSubscription(container) {
 
       <div class="card subscription-card" style="margin-bottom:12px;">
         <div class="card-title">${t('sub_title')}</div>
-        <p class="info-desc" style="margin-bottom:6px;">
+        <p class="info-desc" style="margin-bottom:8px;">
           ${isSubscribed() ? t('sub_active_status') : t('sub_free_status')}
         </p>
-        ${isSubscribed() ? `<p class="form-hint" style="margin-bottom:8px;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>` : ''}
         ${!isSubscribed() ? `
-          <button class="btn-primary" id="btn-subscribe" style="margin-top:6px;">${t('sub_btn')}</button>
+          <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.9;color:var(--text-secondary);">
+            ${t('sub_b1')}<br>
+            ${t('sub_b2')}<br>
+            ${t('sub_b3')}
+          </div>
+          <button class="btn-primary" id="btn-subscribe" style="margin-top:2px;">${t('sub_btn')}</button>
           <div class="donation-result" id="sub-result"></div>
-        ` : ''}
+        ` : `<p class="form-hint" style="margin-bottom:0;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>`}
       </div>
 
       <div class="contact-card">
