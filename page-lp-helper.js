@@ -1,6 +1,7 @@
 import { fetchPools } from './horizon.js';
 import { calcLPRatio } from './amm.js';
 import { formatToken, formatLargeNum } from './util-format.js';
+import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
 
 let allPools     = [];
@@ -43,6 +44,7 @@ function getMissingPairs() {
 }
 
 export async function renderLPHelper(container) {
+  setupPullToRefresh(container, () => renderLPHelper(container));
   container.innerHTML = `
     <div class="lp-wrapper">
       <div class="lp-sticky">

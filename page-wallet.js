@@ -1,6 +1,7 @@
 import { fetchAccount, fetchPoolById } from './horizon.js';
 import { formatPi, formatToken, formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading, rerenderPage } from './app.js';
+import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
 
 const STORAGE_KEY = 'stellar_pub_key';
@@ -63,6 +64,7 @@ export async function renderWallet(container) {
       <div class="wallet-loading">${t('wallet_loading')}</div>
     </div>
   `;
+  setupPullToRefresh(container, () => rerenderPage('wallet'));
   container.querySelector('#btn-wallet-refresh').addEventListener('click', () => rerenderPage('wallet'));
   container.querySelector('#btn-wallet-change').addEventListener('click', () => {
     renderChangeAddressDialog(container, () => {

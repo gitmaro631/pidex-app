@@ -3,20 +3,26 @@ import { formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading } from './app.js';
 import { t } from './i18n.js';
 
-function setupPullToRefresh(container, onRefresh) {
+export function setupPullToRefresh(container, onRefresh) {
+  // 현재 탭의 새로고침 콜백을 전역으로 갱신
+  window._ptrRefreshFn = onRefresh;
+
   const scrollEl = document.querySelector('.page-container');
+  if (!scrollEl) return;
 
-  // 중복 등록 방지
-  if (scrollEl._ptrAttached) return;
-  scrollEl._ptrAttached = true;
-
+  // PTR 인디케이터를 현재 탭 container에 이동
   let indicator = container.querySelector('.ptr-indicator');
   if (!indicator) {
+    document.querySelectorAll('.ptr-indicator').forEach(el => el.remove());
     indicator = document.createElement('div');
     indicator.className = 'ptr-indicator';
     indicator.innerHTML = `<span class="ptr-arrow">↓</span><span class="ptr-text">${t('ptr_pull')}</span>`;
     container.prepend(indicator);
   }
+
+  // 이벤트 리스너는 한 번만 등록
+  if (scrollEl._ptrAttached) return;
+  scrollEl._ptrAttached = true;
 
   let startY = 0;
   let pulling = false;
@@ -47,7 +53,7 @@ function setupPullToRefresh(container, onRefresh) {
     const ind  = document.querySelector('.ptr-indicator');
     if (pulling && dist >= THRESHOLD) {
       if (ind) { ind.innerHTML = '<span class="ptr-spinner"></span>'; ind.style.height = '44px'; }
-      onRefresh();
+      window._ptrRefreshFn?.();
     } else {
       if (ind) { ind.style.height = '0'; ind.style.opacity = '0'; }
     }
