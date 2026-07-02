@@ -36,8 +36,6 @@ async function syncSubscription(uid) {
         });
         const confirm = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
         if (confirm.active && confirm.expiry) localStorage.setItem('sub_expiry', confirm.expiry);
-      } else {
-        localStorage.removeItem('sub_expiry');
       }
     }
   } catch { /* 실패 시 localStorage 그대로 유지 */ }
@@ -84,7 +82,7 @@ export async function authenticate() {
 
         // uid는 항상 존재 — uid 기반으로 구독 동기화
         const uid = currentUser?.uid;
-        if (uid) await syncSubscription(uid);
+        if (uid) syncSubscription(uid);
         resolve(auth);
       })
       .catch(reject);
