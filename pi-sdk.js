@@ -25,6 +25,7 @@ async function syncSubscription(uid) {
     const data = await res.json();
     if (data.active && data.expiry) {
       localStorage.setItem('sub_expiry', data.expiry);
+      window.dispatchEvent(new CustomEvent('sub:synced'));
     } else if (!data.active) {
       const localExpiry = localStorage.getItem('sub_expiry');
       if (localExpiry && new Date(localExpiry) > new Date()) {
@@ -35,7 +36,10 @@ async function syncSubscription(uid) {
           body: JSON.stringify({ uid, expiry: localExpiry }),
         });
         const confirm = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
-        if (confirm.active && confirm.expiry) localStorage.setItem('sub_expiry', confirm.expiry);
+        if (confirm.active && confirm.expiry) {
+          localStorage.setItem('sub_expiry', confirm.expiry);
+          window.dispatchEvent(new CustomEvent('sub:synced'));
+        }
       }
     }
   } catch { /* 실패 시 localStorage 그대로 유지 */ }

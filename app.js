@@ -132,16 +132,15 @@ async function doLogin() {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
     }
 
-    // 구독 뱃지 — syncSubscription 완료 후 localStorage 기준으로 설정
+    // 구독 뱃지 — 로컬 먼저, 백그라운드 동기화 완료 시 갱신
     const badge = document.getElementById('header-sub-badge');
-    if (badge) {
-      if (isSubscribed()) {
-        badge.textContent = t('sub_active');
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
+    function updateSubBadge() {
+      if (!badge) return;
+      if (isSubscribed()) { badge.textContent = t('sub_active'); badge.classList.remove('hidden'); }
+      else { badge.classList.add('hidden'); }
     }
+    updateSubBadge();
+    window.addEventListener('sub:synced', updateSubBadge, { once: true });
 
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-screen').classList.remove('hidden');
