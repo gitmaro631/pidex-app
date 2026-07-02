@@ -24,9 +24,23 @@ async function syncSubscription(walletAddress) {
     if (!res.ok) return;
     const data = await res.json();
     if (data.active && data.expiry) {
+      // Redis에 유효한 기록 → localStorage 갱신
       localStorage.setItem('sub_expiry', data.expiry);
     } else if (!data.active) {
-      localStorage.removeItem('sub_expiry');
+      const localExpiry = localStorage.getItem('sub_expiry');
+      if (localExpiry && new Date(localExpiry) > new Date()) {
+        // Redis에 없지만 localStorage에 유효한 이용권 → Redis에 업로드
+        await fetch('/api/subscription/restore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: walletAddress, expiry: localExpiry }),
+        });
+        const confirm = await fetch(`/api/subscription/status?wallet=${encodeURIComponent(walletAddress)}`).then(r => r.json());
+        if (confirm.active && confirm.expiry) localStorage.setItem('sub_expiry', confirm.expiry);
+      } else {
+        // 둘 다 없거나 만료 → localStorage 제거
+        localStorage.removeItem('sub_expiry');
+      }
     }
   } catch { /* 실패 시 localStorage 그대로 유지 */ }
 }
