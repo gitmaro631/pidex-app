@@ -124,9 +124,9 @@ export function renderSubscription(container) {
             ${t('sub_b3')}
           </div>
           <button class="btn-primary" id="btn-subscribe" style="margin-top:2px;">${t('sub_btn')}</button>
-          <button class="btn-outline" id="btn-restore" style="margin-top:6px;width:100%;font-size:0.85rem;">${t('sub_restore_btn')}</button>
-          <div class="donation-result" id="sub-result"></div>
-        ` : `<p class="form-hint" style="margin-bottom:0;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>`}
+        ` : `<p class="form-hint" style="margin-bottom:4px;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>`}
+        <button class="btn-outline" id="btn-restore" style="margin-top:6px;width:100%;font-size:0.85rem;">${t('sub_restore_btn')}</button>
+        <div class="donation-result" id="sub-result"></div>
       </div>
 
       <div class="contact-card">
