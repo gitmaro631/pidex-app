@@ -1,6 +1,7 @@
 import { showToast } from './app.js';
 import { t } from './i18n.js';
-import { createDonation } from './pi-sdk.js';
+import { createDonation, createSubscriptionPayment } from './pi-sdk.js';
+import { isSubscribed, setSubscription, getSubscriptionExpiry } from './util-storage.js';
 
 const FEATURES = [
   { icon: '📊',
@@ -18,17 +19,17 @@ const FEATURES = [
     desc_fr: 'Visualisez les pools, la liquidité et l\'activité de trading PiDEX d\'un coup d\'œil.' },
   { icon: '🔄',
     ko: '차익 탐색',       en: 'Arbitrage Finder', id: 'Pencarian Arbitrase', zh: '套利查找',        ja: 'アービトラージ探索',     es: 'Buscador de Arbitraje', vi: 'Tìm kiếm Arbitrage',  hi: 'आर्बिट्राज खोजक',pt: 'Buscador de Arbitragem', tl: 'Arbitrage Finder',       fr: "Recherche d'Arbitrage",
-    desc_ko: '삼각차익 경로를 스캔하고 순 수익률을 시뮬레이션합니다. 무료 100회/일.',
-    desc_en: 'Scan arbitrage paths and simulate net return. Free 100×/day.',
-    desc_id: 'Pindai jalur arbitrase dan simulasikan return bersih. Gratis 100×/hari.',
-    desc_zh: '扫描三角套利路径并模拟净收益率。免费 100次/天。',
-    desc_ja: '三角アービトラージ経路をスキャンし純収益率をシミュレートします。無料100回/日。',
-    desc_es: 'Escanea rutas de arbitraje triangular y simula el retorno neto. Gratis 100×/día.',
-    desc_vi: 'Quét các đường đi arbitrage tam giác và mô phỏng lợi nhuận ròng. Miễn phí 100×/ngày.',
-    desc_hi: 'त्रिकोण आर्बिट्राज रास्ते स्कैन करें और शुद्ध रिटर्न सिमुलेट करें। मुफ्त 100×/दिन।',
-    desc_pt: 'Varre caminhos de arbitragem triangular e simula o retorno líquido. Grátis 100×/dia.',
-    desc_tl: 'I-scan ang mga triangular arbitrage path at i-simulate ang net return. Libre 100×/araw.',
-    desc_fr: 'Scanne les chemins d\'arbitrage triangulaire et simule le retour net. Gratuit 100×/jour.' },
+    desc_ko: '삼각차익 경로를 스캔하고 순 수익률을 시뮬레이션합니다. 무료 30회/일, 이용권 구매 시 100회/일.',
+    desc_en: 'Scan arbitrage paths and simulate net return. Free 30×/day, pass holders 100×/day.',
+    desc_id: 'Pindai jalur arbitrase dan simulasikan return bersih. Gratis 30×/hari, pemegang paket 100×/hari.',
+    desc_zh: '扫描三角套利路径并模拟净收益率。免费30次/天，购买使用权后100次/天。',
+    desc_ja: '三角アービトラージ経路をスキャンし純収益率をシミュレートします。無料30回/日、利用券購入で100回/日。',
+    desc_es: 'Escanea rutas de arbitraje triangular y simula el retorno neto. Gratis 30×/día, con pase 100×/día.',
+    desc_vi: 'Quét các đường đi arbitrage tam giác và mô phỏng lợi nhuận ròng. Miễn phí 30×/ngày, có gói 100×/ngày.',
+    desc_hi: 'त्रिकोण आर्बिट्राज रास्ते स्कैन करें और शुद्ध रिटर्न सिमुलेट करें। मुफ्त 30×/दिन, पास के साथ 100×/दिन।',
+    desc_pt: 'Varre caminhos de arbitragem triangular e simula o retorno líquido. Grátis 30×/dia, com passe 100×/dia.',
+    desc_tl: 'I-scan ang mga triangular arbitrage path at i-simulate ang net return. Libre 30×/araw, may pass 100×/araw.',
+    desc_fr: 'Scanne les chemins d\'arbitrage triangulaire et simule le retour net. Gratuit 30×/jour, avec pass 100×/jour.' },
   { icon: '⇄',
     ko: '스왑 시뮬레이터', en: 'Swap Simulator',   id: 'Simulator Swap',      zh: '兑换模拟器',      ja: 'スワップシミュレーター', es: 'Simulador de Swap',     vi: 'Trình mô phỏng Swap', hi: 'Swap सिम्युलेटर', pt: 'Simulador de Swap',   tl: 'Swap Simulator',         fr: 'Simulateur de Swap',
     desc_ko: '예상 수령량·환율·수수료·가격충격을 미리 계산합니다.',
@@ -110,6 +111,18 @@ export function renderSubscription(container) {
         </div>
       </div>
 
+      <div class="card subscription-card" style="margin-bottom:12px;">
+        <div class="card-title">${t('sub_title')}</div>
+        <p class="info-desc" style="margin-bottom:6px;">
+          ${isSubscribed() ? t('sub_active_status') : t('sub_free_status')}
+        </p>
+        ${isSubscribed() ? `<p class="form-hint" style="margin-bottom:8px;">${t('sub_expiry')}: ${new Date(getSubscriptionExpiry()).toLocaleDateString()}</p>` : ''}
+        ${!isSubscribed() ? `
+          <button class="btn-primary" id="btn-subscribe" style="margin-top:6px;">${t('sub_btn')}</button>
+          <div class="donation-result" id="sub-result"></div>
+        ` : ''}
+      </div>
+
       <div class="contact-card">
         <div class="contact-title">${t('info_contact')}</div>
         <p class="contact-desc">${t('info_contact_desc')}</p>
@@ -140,6 +153,33 @@ export function renderSubscription(container) {
 
     </div>
   `;
+
+  const subBtn = container.querySelector('#btn-subscribe');
+  if (subBtn) {
+    subBtn.addEventListener('click', async () => {
+      const resultEl = container.querySelector('#sub-result');
+      subBtn.disabled = true;
+      resultEl.textContent = '';
+      resultEl.className = 'donation-result';
+      try {
+        await createSubscriptionPayment();
+        setSubscription(1);
+        resultEl.textContent = t('sub_ok');
+        resultEl.classList.add('donation-success');
+        const badge = document.getElementById('header-sub-badge');
+        if (badge) { badge.textContent = t('sub_active'); badge.classList.remove('hidden'); }
+        setTimeout(() => { subBtn.remove(); }, 2000);
+      } catch (err) {
+        if (err.message === 'cancelled') {
+          resultEl.textContent = '';
+        } else {
+          resultEl.textContent = t('sub_err');
+          resultEl.classList.add('donation-error');
+        }
+        subBtn.disabled = false;
+      }
+    });
+  }
 
   container.querySelector('#btn-copy-yt').addEventListener('click', () => {
     navigator.clipboard.writeText('youtube.com/@hiddenstrokes-j5w').then(() => {

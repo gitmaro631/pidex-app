@@ -69,14 +69,21 @@ export function createDonation(amount) {
 }
 
 export async function createSubscriptionPayment() {
+  if (typeof Pi === 'undefined') {
+    return Promise.reject(new Error('Pi SDK를 찾을 수 없어요. Pi Browser에서 실행해주세요.'));
+  }
   return new Promise((resolve, reject) => {
     Pi.createPayment(
-      { amount: 1, memo: 'PiDEX 유틸 무제한 구독 (1개월)', metadata: { type: 'subscription' } },
+      { amount: 1, memo: 'PiDEX 유틸 1개월 이용권', metadata: { app: 'pidex_util', type: 'subscription' } },
       {
-        onReadyForServerApproval(paymentId) { console.log('결제 승인 대기:', paymentId); },
-        onReadyForServerCompletion(paymentId, txid) { resolve({ paymentId, txid }); },
-        onCancel() { reject(new Error('결제 취소됨')); },
-        onError(error) { reject(error); },
+        onReadyForServerApproval: async (paymentId) => {
+          try { await serverApprove(paymentId); } catch (err) { reject(err); }
+        },
+        onReadyForServerCompletion: async (paymentId, txid) => {
+          try { await serverComplete(paymentId, txid); resolve({ paymentId, txid }); } catch (err) { reject(err); }
+        },
+        onCancel: () => reject(new Error('cancelled')),
+        onError: (err) => reject(err),
       }
     );
   });
