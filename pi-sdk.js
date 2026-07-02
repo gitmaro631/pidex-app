@@ -67,8 +67,22 @@ export async function authenticate() {
     Pi.authenticate(['username', 'payments', 'wallet_address'], onIncompletePaymentFound)
       .then(async auth => {
         currentUser = auth.user;
-        if (auth.user?.wallet_address) await syncSubscription(auth.user.wallet_address);
-        resolve(auth);
+
+        // SDK가 wallet_address를 안 주면 서버에서 조회
+        if (!auth.user?.wallet_address && auth.accessToken) {
+          try {
+            const r = await fetch('/api/user/wallet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken: auth.accessToken }),
+            });
+            const d = await r.json();
+            if (d.wallet_address) currentUser = { ...auth.user, wallet_address: d.wallet_address };
+          } catch { /* 실패 시 무시 */ }
+        }
+
+        if (currentUser?.wallet_address) await syncSubscription(currentUser.wallet_address);
+        resolve({ ...auth, user: currentUser });
       })
       .catch(reject);
   });

@@ -3,7 +3,6 @@ import { formatPi, formatToken, formatLargeNum } from './util-format.js';
 import { showLoading, hideLoading, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
-import { currentUser } from './pi-sdk.js';
 
 const STORAGE_KEY = 'stellar_pub_key';
 
@@ -74,12 +73,7 @@ export async function renderWallet(container) {
   });
 
   if (!pubKey) {
-    container.querySelector('.wallet-loading').innerHTML = `
-      ${t('wallet_no_key')}<br><br>
-      <span style="font-size:11px;color:#a0aec0;">
-        [디버그] SDK wallet_address: ${currentUser?.wallet_address ?? 'NULL'}<br>
-        localStorage stellar_pub_key: ${localStorage.getItem('stellar_pub_key') ?? 'NULL'}
-      </span>`;
+    container.querySelector('.wallet-loading').textContent = t('wallet_no_key');
     return;
   }
 
