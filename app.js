@@ -6,6 +6,7 @@ import { renderSwap }         from './page-swap.js';
 import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
+import { isSubscribed } from './util-storage.js';
 
 export function showLoading(msg = '처리 중...') {
   document.getElementById('loading-msg').textContent = msg;
@@ -129,6 +130,17 @@ async function doLogin() {
 
     if (auth.user.wallet_address && !localStorage.getItem('stellar_pub_key')) {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
+    }
+
+    // 구독 뱃지 — syncSubscription 완료 후 localStorage 기준으로 설정
+    const badge = document.getElementById('header-sub-badge');
+    if (badge) {
+      if (isSubscribed()) {
+        badge.textContent = t('sub_active');
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
     }
 
     document.getElementById('login-screen').classList.add('hidden');
