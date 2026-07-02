@@ -78,16 +78,7 @@ export async function renderWallet(container) {
   });
 
   if (!pubKey) {
-    const dbg = window._debugAuth;
-    container.querySelector('.wallet-loading').innerHTML = `
-      <p style="margin-bottom:12px;">${t('wallet_no_key')}</p>
-      <div style="background:#1a1a2e;border:1px solid #333;border-radius:8px;padding:10px;font-size:11px;color:#a0aec0;line-height:1.8;margin-bottom:12px;">
-        🔍 디버그<br>
-        wallet_address: <b style="color:#fff;">${dbg?.wallet_address ?? '로그인 정보 없음'}</b><br>
-        accessToken: <b style="color:#fff;">${dbg?.accessToken ?? 'NULL'}</b><br>
-        서버응답: <b style="color:#fff;">${dbg?._server ? JSON.stringify(dbg._server) : '없음'}</b>
-      </div>
-    `;
+    container.querySelector('.wallet-loading').textContent = t('wallet_no_key');
     renderChangeAddressDialog(container, () => rerenderPage('wallet'));
     return;
   }

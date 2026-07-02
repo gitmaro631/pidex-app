@@ -67,11 +67,6 @@ export async function authenticate() {
     Pi.authenticate(['username', 'payments', 'wallet_address'], onIncompletePaymentFound)
       .then(async auth => {
         currentUser = auth.user;
-        // 임시 디버그
-        window._debugAuth = {
-          wallet_address: auth.user?.wallet_address ?? 'NULL',
-          accessToken: auth.accessToken ? auth.accessToken.slice(0, 20) + '...' : 'NULL',
-        };
 
         // SDK가 wallet_address를 안 주면 서버에서 조회
         if (!auth.user?.wallet_address && auth.accessToken) {
@@ -82,7 +77,6 @@ export async function authenticate() {
               body: JSON.stringify({ accessToken: auth.accessToken }),
             });
             const d = await r.json();
-            window._debugAuth._server = d._debug ?? d;
             if (d.wallet_address) {
               currentUser = { ...auth.user, wallet_address: d.wallet_address };
               localStorage.setItem('stellar_pub_key', d.wallet_address);
