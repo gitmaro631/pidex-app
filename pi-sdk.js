@@ -9,33 +9,33 @@ async function serverApprove(paymentId) {
   if (!res.ok) throw new Error(`approve failed: ${res.status}`);
 }
 
-async function serverComplete(paymentId, txid, uid) {
+async function serverComplete(paymentId, txid, username) {
   const res = await fetch('/api/payments/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paymentId, txid, uid }),
+    body: JSON.stringify({ paymentId, txid, username }),
   });
   if (!res.ok) throw new Error(`complete failed: ${res.status}`);
 }
 
-async function syncSubscription(uid) {
+async function syncSubscription(username) {
   try {
-    const res = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`);
+    const res = await fetch(`/api/subscription/status?username=${encodeURIComponent(username)}`);
     if (!res.ok) return;
     const data = await res.json();
     if (data.active && data.expiry) {
       localStorage.setItem('sub_expiry', data.expiry);
       window.dispatchEvent(new CustomEvent('sub:synced'));
     } else if (!data.active) {
+      // 서버에 없고 로컬에 유효한 구독이 있으면 서버에 등록 (마이그레이션)
       const localExpiry = localStorage.getItem('sub_expiry');
       if (localExpiry && new Date(localExpiry) > new Date()) {
-        // Redis에 없지만 localStorage에 유효한 이용권 → Redis에 업로드
         await fetch('/api/subscription/restore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uid, expiry: localExpiry }),
+          body: JSON.stringify({ username, expiry: localExpiry }),
         });
-        const confirm = await fetch(`/api/subscription/status?uid=${encodeURIComponent(uid)}`).then(r => r.json());
+        const confirm = await fetch(`/api/subscription/status?username=${encodeURIComponent(username)}`).then(r => r.json());
         if (confirm.active && confirm.expiry) {
           localStorage.setItem('sub_expiry', confirm.expiry);
           window.dispatchEvent(new CustomEvent('sub:synced'));
@@ -84,9 +84,8 @@ export async function authenticate() {
           } catch { /* 실패 시 무시 */ }
         }
 
-        // uid는 항상 존재 — uid 기반으로 구독 동기화
-        const uid = currentUser?.uid;
-        if (uid) syncSubscription(uid);
+        const username = currentUser?.username;
+        if (username) syncSubscription(username);
         resolve(auth);
       })
       .catch(reject);
@@ -130,7 +129,7 @@ export async function createSubscriptionPayment() {
           try { await serverApprove(paymentId); } catch (err) { reject(err); }
         },
         onReadyForServerCompletion: async (paymentId, txid) => {
-          try { await serverComplete(paymentId, txid, currentUser?.uid); resolve({ paymentId, txid }); } catch (err) { reject(err); }
+          try { await serverComplete(paymentId, txid, currentUser?.username); resolve({ paymentId, txid }); } catch (err) { reject(err); }
         },
         onCancel: () => reject(new Error('cancelled')),
         onError: (err) => reject(err),
