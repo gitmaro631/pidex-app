@@ -19,8 +19,8 @@ const STRINGS = {
   nav_wallet:       { ko:'지갑',   en:'Wallet',    id:'Dompet',    zh:'钱包',   ja:'ウォレット',  es:'Cartera',  vi:'Ví',       hi:'वॉलेट',      pt:'Carteira',  tl:'Wallet',    fr:'Portefeuille' },
   nav_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },
   btn_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },
-  btn_utils:        { ko:'유틸 모음', en:'My Apps', id:'Aplikasi', zh:'工具合集', ja:'アプリ一覧', es:'Mis Apps', vi:'Ứng dụng', hi:'मेरे ऐप्स', pt:'Meus Apps', tl:'Mga App',  fr:'Mes Apps' },
-  utils_title:      { ko:'유틸 모음', en:'My Utilities', id:'Utilitas Saya', zh:'我的工具集', ja:'マイユーティリティ', es:'Mis Utilidades', vi:'Tiện ích của tôi', hi:'मेरे उपकरण', pt:'Minhas Utilidades', tl:'Aking Mga Utility', fr:'Mes Utilitaires' },
+  btn_utils:        { ko:'Pi Hub', en:'Pi Hub', id:'Pi Hub', zh:'Pi Hub', ja:'Pi Hub', es:'Pi Hub', vi:'Pi Hub', hi:'Pi Hub', pt:'Pi Hub', tl:'Pi Hub',  fr:'Pi Hub' },
+  utils_title:      { ko:'Pi Hub', en:'Pi Hub', id:'Pi Hub', zh:'Pi Hub', ja:'Pi Hub', es:'Pi Hub', vi:'Pi Hub', hi:'Pi Hub', pt:'Pi Hub', tl:'Pi Hub', fr:'Pi Hub' },
   utils_soon:       { ko:'유틸 목록이 곧 추가됩니다 :)', en:'More utilities coming soon :)', id:'Utilitas lainnya segera hadir :)', zh:'更多工具即将推出 :)', ja:'他のユーティリティが近日公開 :)', es:'Más utilidades próximamente :)', vi:'Thêm tiện ích sắp ra mắt :)', hi:'और उपकरण जल्द आ रहे हैं :)', pt:'Mais utilitários em breve :)', tl:'Mas maraming utility ang darating :)', fr:"Plus d'utilitaires bientôt :)" },
   btn_close:        { ko:'닫기',   en:'Close',     id:'Tutup',     zh:'关闭',   ja:'閉じる',      es:'Cerrar',   vi:'Đóng',      hi:'बंद करें',  pt:'Fechar',    tl:'Isara',     fr:'Fermer' },
 
