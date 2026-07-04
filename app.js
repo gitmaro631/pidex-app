@@ -122,7 +122,7 @@ async function doLogin() {
   const btn    = document.getElementById('btn-login');
   const errEl  = document.getElementById('login-error');
   btn.disabled = true;
-  btn.innerHTML = '연결 중... / Connecting...';
+  btn.textContent = t('connecting');
   if (errEl) errEl.style.display = 'none';
   try {
     const auth = await authenticate();
@@ -151,8 +151,8 @@ async function doLogin() {
     switchPage('dashboard');
   } catch (e) {
     btn.disabled = false;
-    btn.innerHTML = 'PiDEX 시작하기<br><span class="login-btn-en">Start PiDEX Util</span>';
-    if (errEl) { errEl.textContent = '연결 실패. 다시 시도해주세요. / Connection failed.'; errEl.style.display = 'block'; }
+    btn.textContent = t('login_btn');
+    if (errEl) { errEl.textContent = t('login_fail'); errEl.style.display = 'block'; }
     console.error(e);
   }
 }
@@ -187,8 +187,8 @@ function renderUtilsOverlay() {
           <span class="util-tag">AMM</span>
           <span class="util-tag">Auto Optimize</span>
         </div>
-        <div class="util-card-desc">마켓메이킹 전략 백테스트 시뮬레이터.<br><span class="util-card-desc-en">Market making strategy backtest simulator.</span><br>Stellar 메인넷과 Pi DEX에서 실제 거래 데이터로 전략을 검증하세요.<br><span class="util-card-desc-en">Verify your strategy with real trade data on Stellar Mainnet &amp; Pi DEX.</span></div>
-        <div class="util-card-link">Pi Browser로 열기 →</div>
+        <div class="util-card-desc">${t('hub_mmlab_desc')}</div>
+        <div class="util-card-link">${t('hub_open')}</div>
       </div>
     </a>
 
@@ -203,8 +203,8 @@ function renderUtilsOverlay() {
           <span class="util-tag">Leaderboard</span>
           <span class="util-tag">Survey</span>
         </div>
-        <div class="util-card-desc">Pi DEX 지식 퀴즈 &amp; 글로벌 커뮤니티 설문.<br><span class="util-card-desc-en">Pi DEX knowledge quiz &amp; global community survey.</span></div>
-        <div class="util-card-link">Pi Browser로 열기 →</div>
+        <div class="util-card-desc">${t('hub_quiz_desc')}</div>
+        <div class="util-card-link">${t('hub_open')}</div>
       </div>
     </a>
     </div>
@@ -212,6 +212,12 @@ function renderUtilsOverlay() {
 }
 
 async function init() {
+  // Apply detected language to login screen before login
+  const loginBtn  = document.getElementById('btn-login');
+  const loginNote = document.querySelector('.login-note');
+  if (loginBtn)  loginBtn.textContent  = t('login_btn');
+  if (loginNote) loginNote.textContent = t('login_note');
+
   initPiSDK();
   window._switchLang = switchLang;
   window._toggleLangMenu = () => document.getElementById('lang-menu')?.classList.toggle('open');
