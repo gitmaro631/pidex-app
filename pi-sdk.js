@@ -64,7 +64,7 @@ export async function initPiSDK() {
 
 export async function authenticate() {
   return new Promise((resolve, reject) => {
-    Pi.authenticate(['username', 'payments', 'wallet_address'], onIncompletePaymentFound)
+    Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
       .then(async auth => {
         currentUser = auth.user;
 
