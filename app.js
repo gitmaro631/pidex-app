@@ -176,7 +176,7 @@ function renderUtilsOverlay() {
     </div>
     <div class="utils-body">
 
-    <a class="util-card" href="https://mmstrategylabqge3450.pinet.com/" target="_blank">
+    <a class="util-card" href="#" onclick="window.open('https://mmstrategylabqge3450.pinet.com/', '_hub_'+Date.now());return false;">
       <div class="util-card-icon">
         <img src="icons/mmlab.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="MM Strategy Lab">
       </div>
@@ -192,7 +192,7 @@ function renderUtilsOverlay() {
       </div>
     </a>
 
-    <a class="util-card" href="https://quizpisgn2184.pinet.com" target="_blank">
+    <a class="util-card" href="#" onclick="window.open('https://quizpisgn2184.pinet.com', '_hub_'+Date.now());return false;">
       <div class="util-card-icon">
         <img src="icons/pidex-quiz.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="PiDEX Quiz">
       </div>
