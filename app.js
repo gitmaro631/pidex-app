@@ -210,7 +210,7 @@ function renderUtilsOverlay() {
 
     <a class="util-card" href="#" onclick="return false;" style="opacity:0.6;cursor:default;">
       <div class="util-card-icon">
-        <div style="width:64px;height:64px;border-radius:14px;background:#1e2a38;display:flex;align-items:center;justify-content:center;font-size:28px;">🔍</div>
+        <img src="icons/hack-tracker.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="Pi Hack Tracker">
       </div>
       <div class="util-card-body">
         <div class="util-card-name">Pi Hack Tracker</div>
@@ -226,7 +226,7 @@ function renderUtilsOverlay() {
 
     <a class="util-card" href="#" onclick="return false;" style="opacity:0.6;cursor:default;">
       <div class="util-card-icon">
-        <div style="width:64px;height:64px;border-radius:14px;background:#1e2a38;display:flex;align-items:center;justify-content:center;font-size:28px;">🏕️</div>
+        <img src="icons/survival.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="Pi Survival Game">
       </div>
       <div class="util-card-body">
         <div class="util-card-name">Pi Survival Game</div>
