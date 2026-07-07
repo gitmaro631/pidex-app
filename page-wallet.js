@@ -237,7 +237,9 @@ function txRowHtml(op, walletAlias) {
   const arrow  = isIn ? '↙' : '↗';
 
   const myChip    = `<span style="background:rgba(255,255,255,0.10);padding:2px 7px;border-radius:4px;color:var(--accent);font-weight:600;">${walletAlias}</span>`;
-  const otherChip = `<span style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;color:#999;font-family:monospace;">${short}</span>`;
+  const otherChip = other
+    ? `<span data-copy-addr="${other}" style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;color:#999;font-family:monospace;cursor:pointer;">${short}</span>`
+    : `<span style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;color:#999;font-family:monospace;">?</span>`;
   const fromChip  = isIn ? otherChip : myChip;
   const toChip    = isIn ? myChip    : otherChip;
 
@@ -332,7 +334,7 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px;">${wallet.alias}</div>
-          <div style="font-size:11px;color:#888;font-family:monospace;">${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</div>
+          <div data-copy-addr="${wallet.address}" style="font-size:11px;color:#888;font-family:monospace;cursor:pointer;">${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</div>
         </div>
         <div style="display:flex;gap:4px;">
           <button class="btn-outline btn-sm" id="btn-edit-alias" style="padding:0 8px;font-size:12px;">✏️</button>
@@ -482,6 +484,14 @@ export async function renderWallet(container) {
   });
 
   attachCloudButtons(container);
+
+  container.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-copy-addr]');
+    if (!el) return;
+    const addr = el.dataset.copyAddr;
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => showToast(t('wallet_copied'))).catch(() => {});
+  });
 
   await loadWalletDetail(container.querySelector('#wallet-detail'), active, wallets);
 }
