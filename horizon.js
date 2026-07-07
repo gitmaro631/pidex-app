@@ -115,4 +115,28 @@ export async function submitTransaction(txXdr) {
   return data;
 }
 
+export async function fetchPayments(address, limit = 20) {
+  try {
+    const data = await get(`/accounts/${address}/payments?order=desc&limit=${limit}`);
+    const ops  = data._embedded?.records ?? [];
+    return ops.map(op => {
+      const fromAddr = op.from     ?? op.funder  ?? '';
+      const toAddr   = op.to       ?? op.account ?? '';
+      return {
+        id:         op.id,
+        type:       op.type,
+        created_at: op.created_at,
+        amount:     op.amount ?? op.starting_balance ?? '0',
+        asset_type: op.asset_type,
+        asset_code: op.asset_code,
+        from:       fromAddr,
+        to:         toAddr,
+        isIncoming: toAddr === address,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export const HORIZON_URL = HORIZON;
