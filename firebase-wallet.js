@@ -17,21 +17,47 @@ function getDb() {
   return _db;
 }
 
-export async function backupWalletsToCloud(uid, wallets) {
+export async function backupWalletsToCloud(username, wallets) {
   const db = getDb();
-  if (!db || !uid) throw new Error('no_login');
-  await db.collection('pidex_wallets').doc(uid).set({
+  if (!db || !username) throw new Error('no_login');
+  await db.collection('pidex_wallets').doc(username).set({
     wallets,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
 }
 
-export async function restoreWalletsFromCloud(uid) {
+export async function restoreWalletsFromCloud(username) {
   const db = getDb();
-  if (!db || !uid) throw new Error('no_login');
-  const doc = await db.collection('pidex_wallets').doc(uid).get();
+  if (!db || !username) throw new Error('no_login');
+  const doc = await db.collection('pidex_wallets').doc(username).get();
   if (!doc.exists) return null;
   return doc.data().wallets ?? null;
+}
+
+// pidex_app → hack_tracker 관심주소 등록
+export async function registerInHackWatch(username, address, alias) {
+  const db = getDb();
+  if (!db || !username) throw new Error('no_login');
+  const docRef = db.collection('hack_pending_watch').doc(username);
+  const doc    = await docRef.get();
+  const wallets = doc.exists ? (doc.data().wallets || []) : [];
+  if (!wallets.some(w => w.address === address)) {
+    wallets.push({ address, alias, addedAt: Date.now() });
+    await docRef.set({ wallets });
+  }
+}
+
+// pidex_app → hack_tracker 내 지갑 등록
+export async function registerInHackWallet(username, address, alias) {
+  const db = getDb();
+  if (!db || !username) throw new Error('no_login');
+  const docRef = db.collection('hack_pending_wallets').doc(username);
+  const doc    = await docRef.get();
+  const wallets = doc.exists ? (doc.data().wallets || []) : [];
+  if (!wallets.some(w => w.address === address)) {
+    wallets.push({ address, alias, addedAt: Date.now() });
+    await docRef.set({ wallets });
+  }
 }
 
 // hack_tracker에서 등록 요청한 pending 지갑 가져와 목록 반환 후 삭제

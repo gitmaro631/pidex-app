@@ -4,11 +4,90 @@ import { showLoading, hideLoading, showToast, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
 import { currentUser } from './pi-sdk.js';
-import { backupWalletsToCloud, restoreWalletsFromCloud } from './firebase-wallet.js';
+import { backupWalletsToCloud, restoreWalletsFromCloud, registerInHackWatch, registerInHackWallet } from './firebase-wallet.js';
 
 const WALLETS_KEY = 'pidex_wallets';
 const ACTIVE_KEY  = 'pidex_active_wallet';
 const LEGACY_KEY  = 'stellar_pub_key';
+
+// ─── 주소 컨텍스트 메뉴 ─────────────────────────────────────
+
+let walletMenuAddr = '';
+let walletMenuBound = false;
+let walletMenuDismissing = false;
+
+function showWalletAddrMenu(addr, anchorEl) {
+  walletMenuAddr = addr;
+  const menu  = document.getElementById('wallet-addr-menu');
+  document.getElementById('wamenu-watch').textContent       = `👁 ${t('wallet_ctx_watch')}`;
+  document.getElementById('wamenu-hack-wallet').textContent = `💼 ${t('wallet_ctx_hack_wallet')}`;
+  document.getElementById('wamenu-copy').textContent        = `📋 ${t('wallet_ctx_copy')}`;
+
+  const menuW = 240;
+  const rect  = anchorEl.getBoundingClientRect();
+  let left = Math.min(rect.left, window.innerWidth - menuW - 8);
+  let top  = rect.bottom + 6;
+  if (top + 110 > window.innerHeight) top = rect.top - 114;
+  menu.style.left = `${Math.max(8, left)}px`;
+  menu.style.top  = `${top}px`;
+  menu.classList.remove('hidden');
+}
+
+function hideWalletAddrMenu() {
+  document.getElementById('wallet-addr-menu')?.classList.add('hidden');
+  walletMenuAddr = '';
+}
+
+function initWalletAddrMenu() {
+  if (walletMenuBound) return;
+  walletMenuBound = true;
+
+  document.getElementById('wamenu-watch').addEventListener('click', () => {
+    const addr = walletMenuAddr;
+    hideWalletAddrMenu();
+    if (!addr) return;
+    const username = currentUser?.username;
+    if (!username) { showToast(t('wallet_ctx_fail')); return; }
+    const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
+    registerInHackWatch(username, addr, alias)
+      .then(() => showToast(t('wallet_ctx_watch_sent')))
+      .catch(() => showToast(t('wallet_ctx_fail')));
+  });
+
+  document.getElementById('wamenu-hack-wallet').addEventListener('click', () => {
+    const addr = walletMenuAddr;
+    hideWalletAddrMenu();
+    if (!addr) return;
+    const username = currentUser?.username;
+    if (!username) { showToast(t('wallet_ctx_fail')); return; }
+    const alias = `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
+    registerInHackWallet(username, addr, alias)
+      .then(() => showToast(t('wallet_ctx_hack_sent')))
+      .catch(() => showToast(t('wallet_ctx_fail')));
+  });
+
+  document.getElementById('wamenu-copy').addEventListener('click', () => {
+    const addr = walletMenuAddr;
+    hideWalletAddrMenu();
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => showToast(t('wallet_copied'))).catch(() => {});
+  });
+
+  document.addEventListener('touchstart', (e) => {
+    const menu = document.getElementById('wallet-addr-menu');
+    if (!menu?.classList.contains('hidden') && !menu.contains(e.target) && !e.target.closest('[data-copy-addr]')) {
+      walletMenuDismissing = true;
+      hideWalletAddrMenu();
+    }
+  }, { passive: true });
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('wallet-addr-menu');
+    if (!menu?.classList.contains('hidden') && !menu.contains(e.target) && !e.target.closest('[data-copy-addr]')) {
+      hideWalletAddrMenu();
+    }
+  });
+}
 
 // ─── Storage helpers ────────────────────────────────────────────────────────
 
@@ -181,10 +260,11 @@ function showRestoreDialog(onConfirmed) {
 
 function attachCloudButtons(container) {
   container.querySelector('#btn-cloud-backup')?.addEventListener('click', async () => {
-    if (!currentUser?.uid) { showToast(t('wallet_cloud_fail')); return; }
+    const username = currentUser?.username;
+    if (!username) { showToast(t('wallet_cloud_fail')); return; }
     try {
       showLoading(t('processing'));
-      await backupWalletsToCloud(currentUser.uid, getWallets());
+      await backupWalletsToCloud(username, getWallets());
       hideLoading();
       showToast(t('wallet_cloud_ok'));
     } catch {
@@ -194,11 +274,12 @@ function attachCloudButtons(container) {
   });
 
   container.querySelector('#btn-cloud-restore')?.addEventListener('click', () => {
-    if (!currentUser?.uid) { showToast(t('wallet_cloud_fail')); return; }
+    const username = currentUser?.username;
+    if (!username) { showToast(t('wallet_cloud_fail')); return; }
     showRestoreDialog(async () => {
       try {
         showLoading(t('processing'));
-        const data = await restoreWalletsFromCloud(currentUser.uid);
+        const data = await restoreWalletsFromCloud(username);
         hideLoading();
         if (!data?.length) { showToast(t('wallet_cloud_no_data')); return; }
         saveWallets(data);
@@ -485,12 +566,16 @@ export async function renderWallet(container) {
 
   attachCloudButtons(container);
 
+  initWalletAddrMenu();
+
   container.addEventListener('click', (e) => {
+    if (walletMenuDismissing) { walletMenuDismissing = false; return; }
     const el = e.target.closest('[data-copy-addr]');
     if (!el) return;
     const addr = el.dataset.copyAddr;
     if (!addr) return;
-    navigator.clipboard.writeText(addr).then(() => showToast(t('wallet_copied'))).catch(() => {});
+    e.stopPropagation();
+    showWalletAddrMenu(addr, el);
   });
 
   await loadWalletDetail(container.querySelector('#wallet-detail'), active, wallets);
