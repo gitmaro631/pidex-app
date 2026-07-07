@@ -505,6 +505,43 @@ select.form-input { appearance: none; }
 }
 .modal-body { padding: 16px; }
 
+/* ── 공지 모달 ── */
+.notice-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.notice-box {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 24px 20px 20px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.notice-body {
+  font-size: 14px; line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+.notice-skip-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-secondary);
+  cursor: pointer;
+}
+.notice-skip-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.notice-close-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+}
+.notice-close-btn:active { opacity: 0.85; }
+
 /* ── 애니메이션 ── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) translateX(-50%); } to { opacity: 1; transform: translateY(0) translateX(-50%); } }
 @keyframes spin    { to { transform: rotate(360deg); } }

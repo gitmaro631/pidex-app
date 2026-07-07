@@ -6,6 +6,7 @@ import { renderSwap }         from './page-swap.js';
 import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
+import { NOTICE } from './notice.js';
 import { isSubscribed } from './util-storage.js';
 
 export function showLoading(msg = '처리 중...') {
@@ -149,12 +150,48 @@ async function doLogin() {
     renderHeaderButtons();
     setWalletTabVisible(true);
     switchPage('dashboard');
+    showNoticeIfNeeded();
   } catch (e) {
     btn.disabled = false;
     btn.textContent = t('login_btn');
     if (errEl) { errEl.textContent = t('login_fail'); errEl.style.display = 'block'; }
     console.error(e);
   }
+}
+
+function showNoticeIfNeeded() {
+  if (!NOTICE) return;
+  const SKIP_KEY    = 'notice_skip_until';
+  const VERSION_KEY = 'notice_skip_version';
+  const skipUntil   = parseInt(localStorage.getItem(SKIP_KEY) || '0', 10);
+  const skipVersion = localStorage.getItem(VERSION_KEY) || '';
+  if (skipVersion === NOTICE.version && Date.now() < skipUntil) return;
+
+  const lang = getLang();
+  const text = NOTICE[lang] || NOTICE['en'];
+
+  const overlay = document.createElement('div');
+  overlay.id = 'notice-overlay';
+  overlay.className = 'notice-overlay';
+  overlay.innerHTML = `
+    <div class="notice-box">
+      <div class="notice-body">${text.replace(/\n/g, '<br>')}</div>
+      <label class="notice-skip-label">
+        <input type="checkbox" id="notice-skip-check">
+        <span>${t('notice_skip_week')}</span>
+      </label>
+      <button class="notice-close-btn" id="notice-close-btn">${t('notice_confirm')}</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('notice-close-btn').addEventListener('click', () => {
+    if (document.getElementById('notice-skip-check').checked) {
+      localStorage.setItem(SKIP_KEY, String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+      localStorage.setItem(VERSION_KEY, NOTICE.version);
+    }
+    overlay.remove();
+  });
 }
 
 function renderHeaderButtons() {
