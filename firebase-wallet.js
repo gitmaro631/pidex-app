@@ -33,3 +33,17 @@ export async function restoreWalletsFromCloud(uid) {
   if (!doc.exists) return null;
   return doc.data().wallets ?? null;
 }
+
+// hack_tracker에서 등록 요청한 pending 지갑 가져와 목록 반환 후 삭제
+export async function importPendingWallets(username) {
+  const db = getDb();
+  if (!db || !username) return [];
+  try {
+    const docRef = db.collection('pidex_pending_wallets').doc(username);
+    const doc    = await docRef.get();
+    if (!doc.exists) return [];
+    const wallets = doc.data().wallets ?? [];
+    await docRef.delete();
+    return wallets; // [{address, alias, addedAt}]
+  } catch { return []; }
+}
