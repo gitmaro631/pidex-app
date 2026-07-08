@@ -479,6 +479,10 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
             </div>`).join('')}
         </div>` : ''}
 
+      <!-- Transactions -->
+      <div class="dash-section-title">${t('wallet_txs')}</div>
+      ${txHtml}
+
       <div class="dash-section-title">${t('wallet_lp')}</div>
       ${lpHtml}
 
@@ -496,10 +500,6 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
             ? `<p class="hint-text">${t('wallet_zero_tl')} ${tokensNoBal.length}</p>`
             : ''}
         </div>` : ''}
-
-      <!-- Transactions -->
-      <div class="dash-section-title">${t('wallet_txs')}</div>
-      ${txHtml}
 
       <p class="dash-updated">${t('wallet_updated')}: ${new Date().toLocaleTimeString()}</p>
     `;
