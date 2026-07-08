@@ -9,7 +9,7 @@ const FIREBASE_CONFIG = {
 
 let _db = null;
 
-function getDb() {
+export function getDb() {
   if (_db) return _db;
   if (typeof firebase === 'undefined') return null;
   if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
