@@ -267,9 +267,9 @@ function attachCloudButtons(container) {
       await backupWalletsToCloud(username, getWallets());
       hideLoading();
       showToast(t('wallet_cloud_ok'));
-    } catch {
+    } catch (e) {
       hideLoading();
-      showToast(t('wallet_cloud_err'));
+      showToast((e?.message || String(e)).slice(0, 80));
     }
   });
 
