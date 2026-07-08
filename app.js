@@ -6,7 +6,7 @@ import { renderSwap }         from './page-swap.js';
 import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
-import { NOTICE } from './notice.js';
+const NOTICE = null; // 공지 내용: { version, ko, en, ... } 또는 null(스킵)
 import { isSubscribed } from './util-storage.js';
 import { importPendingWallets } from './firebase-wallet.js';
 
