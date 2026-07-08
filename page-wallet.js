@@ -269,7 +269,7 @@ function attachCloudButtons(container) {
       showToast(t('wallet_cloud_ok'));
     } catch {
       hideLoading();
-      showToast(t('wallet_cloud_fail'));
+      showToast(t('wallet_cloud_err'));
     }
   });
 
