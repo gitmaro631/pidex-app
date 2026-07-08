@@ -236,6 +236,26 @@ function showDeleteDialog(wallet, onConfirmed) {
 
 // ─── Restore warning dialog ─────────────────────────────────────────────────
 
+function showEmptyBackupWarnDialog(onConfirmed) {
+  const { overlay, close } = openModal(`
+    <div class="modal-header">
+      <h2 style="font-size:16px;">${t('wallet_cloud_backup')}</h2>
+      <button class="modal-close" id="md-x">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;line-height:1.6;margin-bottom:16px;color:#f0b429;white-space:pre-line;">${t('wallet_backup_empty_warn')}</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
+        <button class="btn-primary btn-sm" id="md-ok" style="flex:1;">${t('wallet_confirm')}</button>
+      </div>
+    </div>
+  `);
+
+  overlay.querySelector('#md-x').onclick      = close;
+  overlay.querySelector('#md-cancel').onclick = close;
+  overlay.querySelector('#md-ok').onclick     = () => { close(); onConfirmed(); };
+}
+
 function showRestoreDialog(onConfirmed) {
   const { overlay, close } = openModal(`
     <div class="modal-header">
@@ -262,14 +282,21 @@ function attachCloudButtons(container) {
   container.querySelector('#btn-cloud-backup')?.addEventListener('click', async () => {
     const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
     if (!username) { showToast(t('wallet_cloud_fail')); return; }
-    try {
-      showLoading(t('processing'));
-      await backupWalletsToCloud(username, getWallets());
-      hideLoading();
-      showToast(t('wallet_cloud_ok'));
-    } catch (e) {
-      hideLoading();
-      showToast((e?.message || String(e)).slice(0, 80));
+    const doBackup = async () => {
+      try {
+        showLoading(t('processing'));
+        await backupWalletsToCloud(username, getWallets());
+        hideLoading();
+        showToast(t('wallet_cloud_ok'));
+      } catch (e) {
+        hideLoading();
+        showToast(t('wallet_cloud_err'));
+      }
+    };
+    if (getWallets().length === 0) {
+      showEmptyBackupWarnDialog(doBackup);
+    } else {
+      await doBackup();
     }
   });
 
