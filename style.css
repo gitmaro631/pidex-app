@@ -88,6 +88,22 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .nav-icon  { font-size: 20px; }
 .nav-label { font-size: 10px; }
 
+/* ── 계산기 내부 탭 ── */
+.tools-wrapper { padding-bottom: 20px; }
+.tools-inner-tabs {
+  display: flex; gap: 8px; padding: 14px 16px 0;
+}
+.tools-inner-tab {
+  flex: 1; padding: 10px 0; border-radius: 12px;
+  border: 2px solid var(--border); background: transparent;
+  color: var(--text2); font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s;
+}
+.tools-inner-tab.active {
+  border-color: var(--accent); background: rgba(99,179,237,0.12);
+  color: var(--accent);
+}
+
 /* ── 공통 카드 ── */
 .card {
   background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);

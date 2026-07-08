@@ -13,9 +13,8 @@ const STRINGS = {
 
   // ── Nav ──
   nav_dex:          { ko:'덱스',   en:'DEX',       id:'DEX',       zh:'交易所', ja:'DEX',         es:'DEX',      vi:'DEX',      hi:'DEX',         pt:'DEX',       tl:'DEX',       fr:'DEX' },
-  nav_lp:           { ko:'LP 계산', en:'LP Calc',  id:'Kalk. LP',  zh:'LP 计算', ja:'LP計算',      es:'LP Calc',  vi:'Tính LP',  hi:'LP गणना',    pt:'LP Calc',   tl:'LP Calc',   fr:'LP Calc' },
+  nav_tools:        { ko:'계산기',  en:'Tools',     id:'Alat',      zh:'工具',   ja:'ツール',      es:'Herramientas', vi:'Công cụ', hi:'टूल्स',   pt:'Ferramentas', tl:'Tools',    fr:'Outils' },
   nav_arb:          { ko:'차익 탐색', en:'Arb Finder', id:'Arb Finder', zh:'套利查找', ja:'アービトラージ', es:'Arb Finder', vi:'Tìm Arb', hi:'आर्बिट्राज', pt:'Arb Finder', tl:'Arb Finder', fr:'Arb Finder' },
-  nav_swap:         { ko:'스왑',   en:'Swap',      id:'Swap',      zh:'兑换',   ja:'スワップ',    es:'Swap',     vi:'Swap',     hi:'स्वैप',      pt:'Swap',      tl:'Swap',      fr:'Swap' },
   nav_wallet:       { ko:'지갑',   en:'Wallet',    id:'Dompet',    zh:'钱包',   ja:'ウォレット',  es:'Cartera',  vi:'Ví',       hi:'वॉलेट',      pt:'Carteira',  tl:'Wallet',    fr:'Portefeuille' },
   nav_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },
   btn_info:         { ko:'정보',   en:'Info',      id:'Info',      zh:'信息',   ja:'情報',        es:'Info',     vi:'Thông tin', hi:'जानकारी',   pt:'Info',      tl:'Info',      fr:'Info' },

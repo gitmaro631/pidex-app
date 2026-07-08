@@ -1,8 +1,7 @@
 import { initPiSDK, authenticate } from './pi-sdk.js';
 import { renderDashboard }    from './page-dashboard.js';
-import { renderLPHelper }     from './page-lp-helper.js';
+import { renderTools }        from './page-tools.js';
 import { renderArbitrage }    from './page-arbitrage.js';
-import { renderSwap }         from './page-swap.js';
 import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
@@ -40,7 +39,7 @@ export function showToast(msg, type = '') {
   toastTimer = setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
-const NAV_KEYS = ['dex','lp','arb','swap','wallet','info'];
+const NAV_KEYS = ['dex','arb','tools','wallet','info'];
 
 export function updateNavLabels() {
   document.querySelectorAll('.nav-tab').forEach((btn, i) => {
@@ -99,9 +98,8 @@ const renderedPages = new Set();
 
 const PAGE_RENDERERS = {
   dashboard: (c) => renderDashboard(c),
-  lp:        (c) => renderLPHelper(c),
   arbitrage: (c) => renderArbitrage(c),
-  swap:      (c) => renderSwap(c),
+  tools:     (c) => renderTools(c),
   wallet:    (c) => renderWallet(c),
   sub:       (c) => renderSubscription(c),
 };
