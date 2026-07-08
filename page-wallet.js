@@ -46,7 +46,7 @@ function initWalletAddrMenu() {
     const addr = walletMenuAddr;
     hideWalletAddrMenu();
     if (!addr) return;
-    const username = currentUser?.username;
+    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
     registerInHackWatch(username, addr, alias)
@@ -58,7 +58,7 @@ function initWalletAddrMenu() {
     const addr = walletMenuAddr;
     hideWalletAddrMenu();
     if (!addr) return;
-    const username = currentUser?.username;
+    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
     registerInHackWallet(username, addr, alias)
@@ -260,7 +260,7 @@ function showRestoreDialog(onConfirmed) {
 
 function attachCloudButtons(container) {
   container.querySelector('#btn-cloud-backup')?.addEventListener('click', async () => {
-    const username = currentUser?.username;
+    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
     if (!username) { showToast(t('wallet_cloud_fail')); return; }
     try {
       showLoading(t('processing'));
@@ -274,7 +274,7 @@ function attachCloudButtons(container) {
   });
 
   container.querySelector('#btn-cloud-restore')?.addEventListener('click', () => {
-    const username = currentUser?.username;
+    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
     if (!username) { showToast(t('wallet_cloud_fail')); return; }
     showRestoreDialog(async () => {
       try {
