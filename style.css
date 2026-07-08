@@ -511,28 +511,23 @@ select.form-input { appearance: none; }
   background: rgba(0,0,0,0.55);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 .notice-box {
-  background: rgba(26,29,39,0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
   border-radius: 14px;
   padding: 24px 20px 20px;
   max-width: 420px; width: 100%;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.45);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   display: flex; flex-direction: column; gap: 16px;
 }
 .notice-body {
   font-size: 14px; line-height: 1.7;
-  color: var(--text);
+  color: var(--text-primary);
   white-space: pre-wrap;
 }
 .notice-skip-label {
   display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--text2);
+  font-size: 13px; color: var(--text-secondary);
   cursor: pointer;
 }
 .notice-skip-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
