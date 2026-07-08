@@ -7,18 +7,18 @@ import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
-  version: '2026-07-07',
-  ko: '🎉 멀티 지갑 업그레이드!\n\n이제 여러 개의 Pi 지갑을 별칭과 함께 등록하고, 지갑별 잔액·토큰·LP 현황을 한눈에 확인할 수 있습니다.\n지갑 목록은 서버에 백업/복원도 가능합니다.\n\n⚠️ 지갑 등록 시 G로 시작하는 공개주소만 입력하세요. 개인키나 비밀구절은 절대 입력하지 마세요.',
-  en: '🎉 Multi-Wallet Upgrade!\n\nYou can now register multiple Pi wallets with custom nicknames and view balance, tokens, and LP positions for each wallet at a glance.\nYour wallet list can be backed up and restored via cloud.\n\n⚠️ Only enter your public address starting with G. Never enter a private key or seed phrase.',
-  id: '🎉 Peningkatan Multi-Wallet!\n\nKini Anda dapat mendaftarkan beberapa dompet Pi dengan nama panggilan dan melihat saldo, token, serta posisi LP setiap dompet.\nDaftar dompet dapat dicadangkan dan dipulihkan via cloud.\n\n⚠️ Masukkan hanya alamat publik berawalan G. Jangan pernah memasukkan kunci privat atau frasa rahasia.',
-  zh: '🎉 多钱包升级！\n\n现在您可以注册多个Pi钱包并设置别名，一目了然地查看每个钱包的余额、代币和LP状况。\n钱包列表支持云端备份与恢复。\n\n⚠️ 仅输入G开头的公开地址，切勿输入私钥或助记词。',
-  ja: '🎉 マルチウォレットアップグレード！\n\n複数のPiウォレットをニックネーム付きで登録し、各ウォレットの残高・トークン・LP状況を一覧で確認できます。\nウォレットリストのクラウドバックアップ・復元も可能です。\n\n⚠️ Gから始まる公開アドレスのみ入力してください。秘密鍵やシードフレーズは絶対に入力しないでください。',
-  es: '🎉 ¡Actualización Multi-Cartera!\n\nAhora puedes registrar varias carteras Pi con apodos y ver el saldo, tokens y posiciones LP de cada una de un vistazo.\nLa lista de carteras se puede respaldar y restaurar en la nube.\n\n⚠️ Solo ingresa tu dirección pública que comienza con G. Nunca ingreses clave privada ni frase semilla.',
-  vi: '🎉 Nâng cấp Đa Ví!\n\nBạn có thể đăng ký nhiều ví Pi với biệt danh và xem số dư, token, vị thế LP của từng ví.\nDanh sách ví có thể sao lưu và khôi phục qua cloud.\n\n⚠️ Chỉ nhập địa chỉ công khai bắt đầu bằng G. Tuyệt đối không nhập khóa riêng tư hay cụm từ bí mật.',
-  hi: '🎉 मल्टी-वॉलेट अपग्रेड!\n\nअब आप कई Pi वॉलेट को कस्टम उपनाम के साथ पंजीकृत कर सकते हैं और प्रत्येक वॉलेट का बैलेंस, टोकन और LP स्थिति एक नज़र में देख सकते हैं।\nवॉलेट सूची को क्लाउड पर बैकअप और पुनर्स्थापित किया जा सकता है।\n\n⚠️ केवल G से शुरू होने वाला सार्वजनिक पता दर्ज करें। कभी भी निजी कुंजी या बीज वाक्यांश न डालें।',
-  pt: '🎉 Atualização Multi-Carteira!\n\nAgora você pode registrar várias carteiras Pi com apelidos e ver saldo, tokens e posições LP de cada uma.\nA lista de carteiras pode ser salva e restaurada via cloud.\n\n⚠️ Insira apenas o endereço público começando com G. Nunca insira chave privada ou frase semente.',
-  tl: '🎉 Multi-Wallet Upgrade!\n\nMaaari ka nang mag-rehistro ng maraming Pi wallet na may palayaw at makita ang balanse, tokens, at LP positions ng bawat wallet.\nAng listahan ng wallet ay maaaring i-backup at i-restore sa cloud.\n\n⚠️ Ilagay lamang ang public address na nagsisimula sa G. Huwag ilagay ang private key o seed phrase.',
-  fr: '🎉 Mise à jour Multi-Portefeuille !\n\nVous pouvez désormais enregistrer plusieurs portefeuilles Pi avec des surnoms et consulter le solde, les tokens et les positions LP de chacun.\nLa liste des portefeuilles peut être sauvegardée et restaurée via le cloud.\n\n⚠️ Saisissez uniquement votre adresse publique commençant par G. Ne saisissez jamais de clé privée ni de phrase secrète.',
+  version: '2026-07-09',
+  ko: '📢 업데이트 안내\n\n① 버튼명 변경 — 서버에 백업 / 기기에 복원\n② 지갑이 비어있을 때 백업 시도 시 경고창 추가\n③ 지갑 화면 순서 — 보유토큰 → 이체내역 → LP → 연결토큰',
+  en: '📢 Update Notice\n\n① Button renamed — Back Up to Server / Restore to Device\n② Warning added when backing up with empty wallet list\n③ Wallet screen order — Tokens → Transactions → LP → Trustlines',
+  id: '📢 Pemberitahuan Pembaruan\n\n① Nama tombol diubah — Cadangkan ke Server / Pulihkan ke Perangkat\n② Peringatan saat backup dengan daftar dompet kosong\n③ Urutan layar dompet — Token → Transaksi → LP → Trustline',
+  zh: '📢 更新通知\n\n① 按钮名称更改 — 备份到服务器 / 恢复到设备\n② 钱包为空时备份会弹出警告\n③ 钱包页面顺序 — 持有代币 → 转账记录 → LP → 连接代币',
+  ja: '📢 アップデートのお知らせ\n\n① ボタン名変更 — サーバーに保存 / 端末に復元\n② 空のウォレットでバックアップ時に警告表示\n③ ウォレット画面の順番 — 保有トークン → 履歴 → LP → 連携トークン',
+  es: '📢 Aviso de actualización\n\n① Nombre de botón cambiado — Guardar en servidor / Restaurar en dispositivo\n② Advertencia al hacer backup con lista vacía\n③ Orden de pantalla — Tokens → Transacciones → LP → Trustlines',
+  vi: '📢 Thông báo cập nhật\n\n① Đổi tên nút — Sao lưu lên server / Khôi phục về thiết bị\n② Cảnh báo khi sao lưu với danh sách ví trống\n③ Thứ tự màn hình ví — Token → Giao dịch → LP → Trustline',
+  hi: '📢 अपडेट सूचना\n\n① बटन का नाम बदला — सर्वर पर बैकअप / डिवाइस पर पुनर्स्थापित करें\n② खाली वॉलेट सूची पर बैकअप करने पर चेतावनी\n③ वॉलेट स्क्रीन का क्रम — टोकन → लेनदेन → LP → ट्रस्टलाइन',
+  pt: '📢 Aviso de atualização\n\n① Nome do botão alterado — Backup no servidor / Restaurar no dispositivo\n② Aviso ao fazer backup com lista vazia\n③ Ordem da tela de carteira — Tokens → Transações → LP → Trustlines',
+  tl: '📢 Abiso sa Update\n\n① Binago ang pangalan ng button — I-backup sa server / I-restore sa device\n② May babala kapag nag-backup ng walang laman na listahan\n③ Pagkakasunod ng wallet screen — Tokens → Transaksyon → LP → Trustlines',
+  fr: "📢 Avis de mise à jour\n\n① Bouton renommé — Sauvegarder sur serveur / Restaurer sur l'appareil\n② Avertissement lors d'une sauvegarde avec liste vide\n③ Ordre de l'écran — Tokens → Transactions → LP → Trustlines",
 };
 import { isSubscribed } from './util-storage.js';
 import { importPendingWallets, getDb } from './firebase-wallet.js';
