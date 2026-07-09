@@ -21,7 +21,7 @@ const NOTICE = {
   fr: "📢 Avis de mise à jour\n\n① Bouton renommé — Sauvegarder sur serveur / Restaurer sur l'appareil\n② Avertissement lors d'une sauvegarde avec liste vide\n③ Ordre de l'écran — Tokens → Transactions → LP → Trustlines\n④ Nouvel onglet MM — backtesteur de market-making (carnet d'ordres/AMM/auto-optimisation) avec données réelles",
 };
 import { isSubscribed } from './util-storage.js';
-import { importPendingWallets, getDb } from './firebase-wallet.js';
+import { getDb } from './firebase-wallet.js';
 
 export function showLoading(msg = '처리 중...') {
   document.getElementById('loading-msg').textContent = msg;
@@ -165,29 +165,6 @@ async function doLogin() {
     setWalletTabVisible(true);
     switchPage('dashboard');
     showNoticeIfNeeded();
-
-    // hack_tracker에서 등록 요청한 pending 지갑 임포트
-    const username = auth.user.username;
-    if (username) {
-      importPendingWallets(username).then(pending => {
-        if (!pending.length) return;
-        const WALLETS_KEY = 'pidex_wallets';
-        const genId = () => `w${Date.now()}${Math.random().toString(36).slice(2,6)}`;
-        let wallets = [];
-        try { wallets = JSON.parse(localStorage.getItem(WALLETS_KEY) || '[]'); } catch {}
-        let added = 0;
-        for (const p of pending) {
-          if (!wallets.some(w => w.address === p.address)) {
-            wallets.push({ id: genId(), address: p.address, alias: p.alias });
-            added++;
-          }
-        }
-        if (added > 0) {
-          localStorage.setItem(WALLETS_KEY, JSON.stringify(wallets));
-          showToast(t('wallet_pending_imported').replace('{n}', added));
-        }
-      }).catch(() => {});
-    }
   } catch (e) {
     btn.disabled = false;
     btn.textContent = t('login_btn');

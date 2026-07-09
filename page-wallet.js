@@ -4,11 +4,17 @@ import { showLoading, hideLoading, showToast, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
 import { currentUser } from './pi-sdk.js';
-import { backupWalletsToCloud, restoreWalletsFromCloud, registerInHackWatch, registerInHackWallet } from './firebase-wallet.js';
+import {
+  fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
+  registerInHackWatch, registerInHackWallet,
+} from './firebase-wallet.js';
 
-const WALLETS_KEY = 'pidex_wallets';
-const ACTIVE_KEY  = 'pidex_active_wallet';
-const LEGACY_KEY  = 'stellar_pub_key';
+const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목록 자체는 서버가 원본
+
+function getActiveId()   { return localStorage.getItem(ACTIVE_KEY); }
+function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
+function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
 
 // ─── 주소 컨텍스트 메뉴 ─────────────────────────────────────
 
@@ -46,7 +52,7 @@ function initWalletAddrMenu() {
     const addr = walletMenuAddr;
     hideWalletAddrMenu();
     if (!addr) return;
-    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
+    const username = getUsername();
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
     registerInHackWatch(username, addr, alias)
@@ -62,16 +68,7 @@ function initWalletAddrMenu() {
     const addr = walletMenuAddr;
     hideWalletAddrMenu();
     if (!addr) return;
-    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
-    if (!username) { showToast(t('wallet_ctx_fail')); return; }
-    const alias = `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
-    registerInHackWallet(username, addr, alias)
-      .then(result => {
-        if (result === 'added')     showToast(t('wallet_ctx_hack_sent'));
-        else if (result === 'duplicate') showToast(t('wallet_ctx_hack_dup'));
-        else if (result === 'full') showToast(t('wallet_ctx_hack_full'));
-      })
-      .catch(() => showToast(t('wallet_ctx_fail')));
+    sendAddrToHackWallet(addr);
   });
 
   document.getElementById('wamenu-copy').addEventListener('click', () => {
@@ -97,29 +94,20 @@ function initWalletAddrMenu() {
   });
 }
 
-// ─── Storage helpers ────────────────────────────────────────────────────────
+// ─── 퀴즈파이 메인넷지갑에 등록 (컨텍스트 메뉴 + 지갑 카드 버튼 공용) ─────
 
-function getWallets() {
-  try { return JSON.parse(localStorage.getItem(WALLETS_KEY)) ?? []; } catch { return []; }
-}
-function saveWallets(wallets) {
-  localStorage.setItem(WALLETS_KEY, JSON.stringify(wallets));
-}
-function getActiveId()    { return localStorage.getItem(ACTIVE_KEY); }
-function setActiveId(id)  { localStorage.setItem(ACTIVE_KEY, id); }
-function genId()          { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
-
-function getActiveWallet() {
-  const wallets = getWallets();
-  if (!wallets.length) return null;
-  return wallets.find(w => w.id === getActiveId()) ?? wallets[0];
-}
-
-function migrateLegacy() {
-  if (localStorage.getItem(WALLETS_KEY) !== null) return;
-  const legacy = localStorage.getItem(LEGACY_KEY);
-  if (!legacy) return;
-  saveWallets([{ id: genId(), address: legacy, alias: 'Wallet 1' }]);
+async function sendAddrToHackWallet(addr, alias) {
+  const username = getUsername();
+  if (!username) { showToast(t('wallet_ctx_fail')); return; }
+  const finalAlias = alias || `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
+  try {
+    const result = await registerInHackWallet(username, addr, finalAlias);
+    if (result === 'added')          showToast(t('wallet_ctx_hack_sent'));
+    else if (result === 'duplicate') showToast(t('wallet_ctx_hack_dup'));
+    else if (result === 'full')      showToast(t('wallet_ctx_hack_full'));
+  } catch {
+    showToast(t('wallet_ctx_fail'));
+  }
 }
 
 // ─── Modal factory ──────────────────────────────────────────────────────────
@@ -136,7 +124,7 @@ function openModal(innerHtml) {
 
 // ─── Add wallet dialog ──────────────────────────────────────────────────────
 
-function showAddDialog(onSaved) {
+function showAddDialog(currentWallets, onSaved) {
   const { overlay, close } = openModal(`
     <div class="modal-header">
       <h2 style="font-size:16px;">${t('wallet_add_title')}</h2>
@@ -161,35 +149,49 @@ function showAddDialog(onSaved) {
   overlay.querySelector('#md-x').onclick      = close;
   overlay.querySelector('#md-cancel').onclick = close;
 
-  overlay.querySelector('#md-save').onclick = () => {
-    const alias  = overlay.querySelector('#md-alias').value.trim() || `Wallet ${getWallets().length + 1}`;
-    const addr   = overlay.querySelector('#md-addr').value.trim();
-    const errEl  = overlay.querySelector('#md-err');
+  overlay.querySelector('#md-save').onclick = async () => {
+    const alias   = overlay.querySelector('#md-alias').value.trim() || `Wallet ${currentWallets.length + 1}`;
+    const addr    = overlay.querySelector('#md-addr').value.trim();
+    const errEl   = overlay.querySelector('#md-err');
+    const saveBtn = overlay.querySelector('#md-save');
 
     if (!addr.startsWith('G') || addr.length !== 56) {
-      errEl.textContent  = t('info_key_invalid');
+      errEl.textContent = t('info_key_invalid');
       errEl.style.display = '';
       return;
     }
-    if (getWallets().some(w => w.address === addr)) {
-      errEl.textContent  = t('wallet_duplicate_addr');
+    if (currentWallets.some(w => w.address === addr)) {
+      errEl.textContent = t('wallet_duplicate_addr');
+      errEl.style.display = '';
+      return;
+    }
+    if (currentWallets.length >= PIDEX_WALLET_MAX) {
+      errEl.textContent = t('wallet_full').replace('{n}', PIDEX_WALLET_MAX);
       errEl.style.display = '';
       return;
     }
 
-    const wallet  = { id: genId(), address: addr, alias };
-    const wallets = getWallets();
-    wallets.push(wallet);
-    saveWallets(wallets);
-    setActiveId(wallet.id);
-    close();
-    onSaved();
+    const username = getUsername();
+    if (!username) { errEl.textContent = t('wallet_cloud_fail'); errEl.style.display = ''; return; }
+
+    const wallet = { id: genId(), address: addr, alias };
+    saveBtn.disabled = true;
+    try {
+      await saveWalletsServer(username, [...currentWallets, wallet]);
+      setActiveId(wallet.id);
+      close();
+      onSaved();
+    } catch {
+      errEl.textContent = t('wallet_cloud_err');
+      errEl.style.display = '';
+      saveBtn.disabled = false;
+    }
   };
 }
 
 // ─── Edit alias dialog ──────────────────────────────────────────────────────
 
-function showEditAliasDialog(wallet, onSaved) {
+function showEditAliasDialog(wallet, allWallets, onSaved) {
   const { overlay, close } = openModal(`
     <div class="modal-header">
       <h2 style="font-size:16px;">${t('wallet_edit_alias')}</h2>
@@ -197,6 +199,7 @@ function showEditAliasDialog(wallet, onSaved) {
     </div>
     <div class="modal-body">
       <input type="text" id="md-alias" class="form-input" value="${wallet.alias}" style="font-size:12px;" />
+      <p id="md-err" style="color:var(--red);font-size:11px;margin-top:6px;display:none;"></p>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
         <button class="btn-primary btn-sm" id="md-save" style="flex:1;">${t('wallet_change_save')}</button>
@@ -208,20 +211,32 @@ function showEditAliasDialog(wallet, onSaved) {
   overlay.querySelector('#md-cancel').onclick = close;
   overlay.querySelector('#md-alias').select();
 
-  overlay.querySelector('#md-save').onclick = () => {
-    const alias = overlay.querySelector('#md-alias').value.trim();
+  overlay.querySelector('#md-save').onclick = async () => {
+    const alias   = overlay.querySelector('#md-alias').value.trim();
+    const errEl   = overlay.querySelector('#md-err');
+    const saveBtn = overlay.querySelector('#md-save');
     if (!alias) return;
-    const wallets = getWallets();
-    const idx     = wallets.findIndex(w => w.id === wallet.id);
-    if (idx !== -1) { wallets[idx].alias = alias; saveWallets(wallets); }
-    close();
-    onSaved();
+
+    const username = getUsername();
+    if (!username) { errEl.textContent = t('wallet_cloud_fail'); errEl.style.display = ''; return; }
+
+    const updated = allWallets.map(w => w.id === wallet.id ? { ...w, alias } : w);
+    saveBtn.disabled = true;
+    try {
+      await saveWalletsServer(username, updated);
+      close();
+      onSaved();
+    } catch {
+      errEl.textContent = t('wallet_cloud_err');
+      errEl.style.display = '';
+      saveBtn.disabled = false;
+    }
   };
 }
 
 // ─── Delete confirm dialog ──────────────────────────────────────────────────
 
-function showDeleteDialog(wallet, onConfirmed) {
+function showDeleteDialog(wallet, allWallets, onConfirmed) {
   const { overlay, close } = openModal(`
     <div class="modal-header">
       <h2 style="font-size:16px;">${t('wallet_delete')}</h2>
@@ -230,6 +245,7 @@ function showDeleteDialog(wallet, onConfirmed) {
     <div class="modal-body">
       <p style="font-size:13px;margin-bottom:12px;line-height:1.5;">${t('wallet_delete_confirm')}</p>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">${wallet.alias} · ${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</p>
+      <p id="md-err" style="color:var(--red);font-size:11px;margin-bottom:8px;display:none;"></p>
       <div style="display:flex;gap:8px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
         <button class="btn-primary btn-sm" id="md-del" style="flex:1;background:var(--red);">${t('wallet_delete')}</button>
@@ -239,104 +255,24 @@ function showDeleteDialog(wallet, onConfirmed) {
 
   overlay.querySelector('#md-x').onclick      = close;
   overlay.querySelector('#md-cancel').onclick = close;
-  overlay.querySelector('#md-del').onclick    = () => { close(); onConfirmed(); };
-}
+  overlay.querySelector('#md-del').onclick    = async () => {
+    const errEl  = overlay.querySelector('#md-err');
+    const delBtn = overlay.querySelector('#md-del');
+    const username = getUsername();
+    if (!username) { errEl.textContent = t('wallet_cloud_fail'); errEl.style.display = ''; return; }
 
-// ─── Restore warning dialog ─────────────────────────────────────────────────
-
-function showEmptyBackupWarnDialog(onConfirmed) {
-  const { overlay, close } = openModal(`
-    <div class="modal-header">
-      <h2 style="font-size:16px;">${t('wallet_cloud_backup')}</h2>
-      <button class="modal-close" id="md-x">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:12px;line-height:1.6;margin-bottom:16px;color:#f0b429;white-space:pre-line;">${t('wallet_backup_empty_warn')}</p>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
-        <button class="btn-primary btn-sm" id="md-ok" style="flex:1;">${t('wallet_confirm')}</button>
-      </div>
-    </div>
-  `);
-
-  overlay.querySelector('#md-x').onclick      = close;
-  overlay.querySelector('#md-cancel').onclick = close;
-  overlay.querySelector('#md-ok').onclick     = () => { close(); onConfirmed(); };
-}
-
-function showRestoreDialog(onConfirmed) {
-  const { overlay, close } = openModal(`
-    <div class="modal-header">
-      <h2 style="font-size:16px;">${t('wallet_cloud_restore')}</h2>
-      <button class="modal-close" id="md-x">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:12px;line-height:1.6;margin-bottom:16px;color:#f0b429;">${t('wallet_restore_warn')}</p>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
-        <button class="btn-primary btn-sm" id="md-ok" style="flex:1;">${t('wallet_confirm')}</button>
-      </div>
-    </div>
-  `);
-
-  overlay.querySelector('#md-x').onclick      = close;
-  overlay.querySelector('#md-cancel').onclick = close;
-  overlay.querySelector('#md-ok').onclick     = () => { close(); onConfirmed(); };
-}
-
-// ─── Cloud backup / restore ─────────────────────────────────────────────────
-
-function attachCloudButtons(container) {
-  container.querySelector('#btn-cloud-backup')?.addEventListener('click', async () => {
-    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
-    if (!username) { showToast(t('wallet_cloud_fail')); return; }
-    const doBackup = async () => {
-      try {
-        showLoading(t('processing'));
-        await backupWalletsToCloud(username, getWallets());
-        hideLoading();
-        showToast(t('wallet_cloud_ok'));
-      } catch (e) {
-        hideLoading();
-        showToast(t('wallet_cloud_err'));
-      }
-    };
-    if (getWallets().length === 0) {
-      showEmptyBackupWarnDialog(doBackup);
-    } else {
-      await doBackup();
+    const remaining = allWallets.filter(w => w.id !== wallet.id);
+    delBtn.disabled = true;
+    try {
+      await saveWalletsServer(username, remaining);
+      close();
+      onConfirmed(remaining);
+    } catch {
+      errEl.textContent = t('wallet_cloud_err');
+      errEl.style.display = '';
+      delBtn.disabled = false;
     }
-  });
-
-  container.querySelector('#btn-cloud-restore')?.addEventListener('click', () => {
-    const username = currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null;
-    if (!username) { showToast(t('wallet_cloud_fail')); return; }
-    showRestoreDialog(async () => {
-      try {
-        showLoading(t('processing'));
-        const data = await restoreWalletsFromCloud(username);
-        hideLoading();
-        if (!data?.length) { showToast(t('wallet_cloud_no_data')); return; }
-        saveWallets(data);
-        setActiveId(data[0].id);
-        showToast(t('wallet_restore_ok'));
-        rerenderPage('wallet');
-      } catch {
-        hideLoading();
-        showToast(t('wallet_restore_fail'));
-      }
-    });
-  });
-}
-
-function cloudButtonsHtml() {
-  return `
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button class="btn-outline btn-sm" id="btn-cloud-backup"  style="flex:1;font-size:11px;">${t('wallet_cloud_backup')}</button>
-      <button class="btn-outline btn-sm" id="btn-cloud-restore" style="flex:1;font-size:11px;">${t('wallet_cloud_restore')}</button>
-    </div>
-    <p style="font-size:11px;color:#f0b429;margin:6px 0 0;line-height:1.5;opacity:0.85;">💡 ${t('wallet_backup_tip')}</p>
-  `;
+  };
 }
 
 // ─── Transaction row ────────────────────────────────────────────────────────
@@ -375,23 +311,35 @@ function txRowHtml(op, walletAlias) {
   `;
 }
 
-// ─── Empty state ────────────────────────────────────────────────────────────
+// ─── Empty / error states ───────────────────────────────────────────────────
 
-function renderEmptyState(container) {
+function renderEmptyState(container, wallets) {
   container.innerHTML = `
     <div class="page-content">
       <h2 class="page-title">${t('wallet_title')}</h2>
       <div class="card" style="text-align:center;padding:32px 16px;">
-        <p style="color:var(--text-dim);margin-bottom:20px;">${t('wallet_no_wallets')}</p>
+        <p style="color:var(--text-dim);margin-bottom:4px;">${t('wallet_no_wallets')}</p>
+        <p style="font-size:11px;color:var(--text-dim);margin-bottom:20px;">${t('wallet_max_hint').replace('{n}', PIDEX_WALLET_MAX)}</p>
         <button class="btn-primary" id="btn-add-first" style="width:auto;padding:0 24px;">${t('wallet_add')}</button>
       </div>
-      ${cloudButtonsHtml()}
     </div>
   `;
   container.querySelector('#btn-add-first').addEventListener('click', () => {
-    showAddDialog(() => rerenderPage('wallet'));
+    showAddDialog(wallets, () => rerenderPage('wallet'));
   });
-  attachCloudButtons(container);
+}
+
+function renderLoadFailState(container, reasonKey) {
+  container.innerHTML = `
+    <div class="page-content">
+      <h2 class="page-title">${t('wallet_title')}</h2>
+      <div class="card" style="text-align:center;padding:32px 16px;">
+        <p style="color:var(--red);margin-bottom:16px;">${t(reasonKey)}</p>
+        <button class="btn-outline" id="btn-wallet-retry" style="width:auto;padding:0 24px;">↻ ${t('wallet_refresh')}</button>
+      </div>
+    </div>
+  `;
+  container.querySelector('#btn-wallet-retry').addEventListener('click', () => rerenderPage('wallet'));
 }
 
 // ─── Wallet detail ──────────────────────────────────────────────────────────
@@ -454,6 +402,7 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
         </div>
         <div style="display:flex;gap:4px;">
           <button class="btn-outline btn-sm" id="btn-edit-alias" style="padding:0 8px;font-size:12px;">✏️</button>
+          <button class="btn-outline btn-sm" id="btn-send-hack" style="padding:0 8px;font-size:12px;" title="${t('wallet_send_to_hack')}">💼→</button>
           ${allWallets.length > 1 ? `<button class="btn-outline btn-sm" id="btn-del-wallet" style="padding:0 8px;font-size:12px;">🗑️</button>` : ''}
         </div>
       </div>
@@ -513,13 +462,15 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
     `;
 
     detailEl.querySelector('#btn-edit-alias')?.addEventListener('click', () => {
-      showEditAliasDialog(wallet, () => rerenderPage('wallet'));
+      showEditAliasDialog(wallet, allWallets, () => rerenderPage('wallet'));
+    });
+
+    detailEl.querySelector('#btn-send-hack')?.addEventListener('click', () => {
+      sendAddrToHackWallet(wallet.address, `★${wallet.alias}`);
     });
 
     detailEl.querySelector('#btn-del-wallet')?.addEventListener('click', () => {
-      showDeleteDialog(wallet, () => {
-        const remaining = getWallets().filter(w => w.id !== wallet.id);
-        saveWallets(remaining);
+      showDeleteDialog(wallet, allWallets, (remaining) => {
         if (remaining.length) setActiveId(remaining[0].id);
         rerenderPage('wallet');
       });
@@ -539,24 +490,39 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
 // ─── Main render ────────────────────────────────────────────────────────────
 
 export async function renderWallet(container) {
-  migrateLegacy();
+  container.innerHTML = `<div class="page-content"><p style="color:var(--text-dim);padding:16px 0;">${t('wallet_loading')}</p></div>`;
 
-  // Auto-register Pi SDK wallet on first load if no wallets exist
-  if (currentUser?.wallet_address && !getWallets().length) {
-    saveWallets([{ id: genId(), address: currentUser.wallet_address, alias: 'Pi Wallet' }]);
-  }
-
-  const wallets = getWallets();
-
-  if (!wallets.length) {
-    renderEmptyState(container);
+  const username = getUsername();
+  if (!username) {
+    renderLoadFailState(container, 'wallet_cloud_fail');
     return;
   }
 
-  const active = getActiveWallet();
+  let wallets;
+  try {
+    wallets = await fetchWalletsServer(username);
+  } catch {
+    renderLoadFailState(container, 'wallet_load_fail');
+    return;
+  }
+
+  // 최초 1회: Pi SDK 지갑 자동 등록 (서버에 아무것도 없을 때만)
+  if (!wallets.length && currentUser?.wallet_address) {
+    const autoWallet = { id: genId(), address: currentUser.wallet_address, alias: 'Pi Wallet' };
+    try {
+      await saveWalletsServer(username, [autoWallet]);
+      wallets = [autoWallet];
+    } catch { /* 실패해도 빈 상태로 계속 진행 */ }
+  }
+
+  if (!wallets.length) {
+    renderEmptyState(container, wallets);
+    return;
+  }
+
+  const active = wallets.find(w => w.id === getActiveId()) ?? wallets[0];
   setActiveId(active.id);
 
-  // Selector bar HTML
   const selectorHtml = `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
       ${wallets.map(w => `
@@ -565,21 +531,20 @@ export async function renderWallet(container) {
           style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px solid ${w.id === active.id ? 'var(--accent)' : 'var(--border)'};background:${w.id === active.id ? 'var(--accent)' : 'transparent'};color:${w.id === active.id ? '#000' : 'var(--text)'};cursor:pointer;white-space:nowrap;">
           ${w.alias}
         </button>`).join('')}
-      <button id="btn-add-wallet"
+      ${wallets.length < PIDEX_WALLET_MAX ? `<button id="btn-add-wallet"
         style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px dashed var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">
         + ${t('wallet_add')}
-      </button>
+      </button>` : ''}
     </div>
   `;
 
   container.innerHTML = `
     <div class="page-content">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <h2 class="page-title" style="margin:0;">${t('wallet_title')}</h2>
+        <h2 class="page-title" style="margin:0;">${t('wallet_title')} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(${wallets.length}/${PIDEX_WALLET_MAX})</span></h2>
         <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
       </div>
       ${selectorHtml}
-      ${cloudButtonsHtml()}
       <div id="wallet-detail" style="margin-top:16px;"></div>
     </div>
   `;
@@ -588,8 +553,8 @@ export async function renderWallet(container) {
 
   container.querySelector('#btn-wallet-refresh').addEventListener('click', () => rerenderPage('wallet'));
 
-  container.querySelector('#btn-add-wallet').addEventListener('click', () => {
-    showAddDialog(() => rerenderPage('wallet'));
+  container.querySelector('#btn-add-wallet')?.addEventListener('click', () => {
+    showAddDialog(wallets, () => rerenderPage('wallet'));
   });
 
   container.querySelectorAll('[data-wid]').forEach(btn => {
@@ -598,8 +563,6 @@ export async function renderWallet(container) {
       rerenderPage('wallet');
     });
   });
-
-  attachCloudButtons(container);
 
   initWalletAddrMenu();
 

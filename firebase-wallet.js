@@ -17,21 +17,23 @@ export function getDb() {
   return _db;
 }
 
-export async function backupWalletsToCloud(username, wallets) {
+// 파이덱스앱 지갑 탭 (테스트넷) — 서버가 원본, pidex_wallets 컬렉션
+export const PIDEX_WALLET_MAX = 30;
+
+export async function fetchWalletsServer(username) {
+  const db = getDb();
+  if (!db || !username) throw new Error('no_login');
+  const doc = await db.collection('pidex_wallets').doc(username).get();
+  return doc.exists ? (doc.data().wallets || []) : [];
+}
+
+export async function saveWalletsServer(username, wallets) {
   const db = getDb();
   if (!db || !username) throw new Error('no_login');
   await db.collection('pidex_wallets').doc(username).set({
     wallets,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
-}
-
-export async function restoreWalletsFromCloud(username) {
-  const db = getDb();
-  if (!db || !username) throw new Error('no_login');
-  const doc = await db.collection('pidex_wallets').doc(username).get();
-  if (!doc.exists) return null;
-  return doc.data().wallets ?? null;
 }
 
 // pidex_app → hack_tracker 관심주소 등록 (서버가 원본 — pidex_watch_list 직접 갱신)
@@ -63,18 +65,4 @@ export async function registerInHackWallet(username, address, alias) {
   wallets.push({ id: `h${Date.now()}`, address, alias, addedAt: Date.now() });
   await docRef.set({ wallets, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
   return 'added';
-}
-
-// hack_tracker에서 등록 요청한 pending 지갑 가져와 목록 반환 후 삭제
-export async function importPendingWallets(username) {
-  const db = getDb();
-  if (!db || !username) return [];
-  try {
-    const docRef = db.collection('pidex_pending_wallets').doc(username);
-    const doc    = await docRef.get();
-    if (!doc.exists) return [];
-    const wallets = doc.data().wallets ?? [];
-    await docRef.delete();
-    return wallets; // [{address, alias, addedAt}]
-  } catch { return []; }
 }
