@@ -79,6 +79,7 @@ const S = {
   run_complete: { ko:'완료', en:'complete' },
   run_too_few:  { ko:'데이터가 너무 적습니다 (10건 미만)', en:'Too little data (under 10 records)' },
   run_error:    { ko:'오류', en:'Error' },
+  fetch_timeout:{ ko:'요청 시간 초과 (네트워크 확인 후 다시 시도해주세요)', en:'Request timed out (check your connection and retry)' },
   run_live_roi: { ko:'실시간 예상 수익률', en:'Live ROI Preview' },
 
   res_summary:   { ko:'종합 결과', en:'Summary' },
@@ -277,7 +278,22 @@ function freshState() {
 
 function horizonBase() { return NETWORKS[state.network].horizon; }
 
-function apiFetch(url) { return fetch(url); }
+const FETCH_TIMEOUT_MS = 15000;
+let _currentAbort = null;
+
+async function apiFetch(url) {
+  const controller = new AbortController();
+  _currentAbort = controller;
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(_fetchStop ? 'stopped' : tr(S.fetch_timeout));
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function strKeyToHex(strKey) {
   const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -298,7 +314,7 @@ function strKeyToHex(strKey) {
 }
 
 async function fetchPools() {
-  const expertResp = await fetch('https://api.stellar.expert/explorer/public/liquidity-pool?sort=volume&order=desc&limit=200');
+  const expertResp = await apiFetch('https://api.stellar.expert/explorer/public/liquidity-pool?sort=volume&order=desc&limit=200');
   if (!expertResp.ok) throw new Error(`Stellar Expert API ${expertResp.status}`);
   const expertJson = await expertResp.json();
   const expertPools = expertJson._embedded?.records || [];
@@ -399,7 +415,13 @@ async function paginate(url, params, total, onProgress) {
   for (let i = 0; i < pages; i++) {
     if (_fetchStop) break;
     if (cursor) params.set('cursor', cursor);
-    const r = await fetchWithRetry(`${url}?${params}`);
+    let r;
+    try {
+      r = await fetchWithRetry(`${url}?${params}`);
+    } catch (e) {
+      if (_fetchStop) break;
+      throw e;
+    }
     const records = (await r.json())._embedded?.records || [];
     if (!records.length) break;
     all.push(...records);
@@ -1079,6 +1101,7 @@ function renderRunStep(el, nav) {
 
 function stopFetch() {
   _fetchStop = true;
+  _currentAbort?.abort();
   const btn = rootContainer.querySelector('#mm-btn-stop-fetch');
   if (btn) btn.disabled = true;
 }
@@ -1495,7 +1518,9 @@ async function runAutoScan() {
       let tradeRecords;
       try {
         const fetchFn = subStrategy === 'amm' ? fetchTradesForPool : fetchTradesForPair;
-        tradeRecords  = await fetchFn(pool, records, () => {});
+        tradeRecords  = await fetchFn(pool, records, (cur, tot) => {
+          status(`<span class="spinner"></span> [${i + 1}/${selected.length}] ${label} — ${cur} / ${tot} ${tr(S.run_received)}`);
+        });
       } catch (e) {
         log(`✗ ${label}: ${e.message}`);
         continue;
