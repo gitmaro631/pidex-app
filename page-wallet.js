@@ -50,7 +50,11 @@ function initWalletAddrMenu() {
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
     registerInHackWatch(username, addr, alias)
-      .then(() => showToast(t('wallet_ctx_watch_sent')))
+      .then(result => {
+        if (result === 'added')     showToast(t('wallet_ctx_watch_sent'));
+        else if (result === 'duplicate') showToast(t('wallet_ctx_watch_dup'));
+        else if (result === 'full') showToast(t('wallet_ctx_watch_full'));
+      })
       .catch(() => showToast(t('wallet_ctx_fail')));
   });
 
@@ -62,7 +66,11 @@ function initWalletAddrMenu() {
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
     registerInHackWallet(username, addr, alias)
-      .then(() => showToast(t('wallet_ctx_hack_sent')))
+      .then(result => {
+        if (result === 'added')     showToast(t('wallet_ctx_hack_sent'));
+        else if (result === 'duplicate') showToast(t('wallet_ctx_hack_dup'));
+        else if (result === 'full') showToast(t('wallet_ctx_hack_full'));
+      })
       .catch(() => showToast(t('wallet_ctx_fail')));
   });
 
