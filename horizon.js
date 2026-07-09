@@ -6,6 +6,17 @@ async function get(path) {
   return res.json();
 }
 
+// 계정이 Pi 테스트넷에서 활성화됐는지 확인 (한 번도 Pi를 받은 적 없으면 404)
+// 네트워크 오류 시에는 fail-open(활성으로 간주)하여 불필요하게 경고를 막지 않음
+export async function isAccountActive(address) {
+  try {
+    const res = await fetch(`${HORIZON}/accounts/${address}`);
+    return res.ok;
+  } catch {
+    return true;
+  }
+}
+
 export async function fetchAccount(address) {
   const data     = await get(`/accounts/${address}`);
   const pi       = data.balances.find(b => b.asset_type === 'native');

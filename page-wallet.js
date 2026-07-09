@@ -1,4 +1,4 @@
-import { fetchAccount, fetchPoolById, fetchPayments } from './horizon.js';
+import { fetchAccount, fetchPoolById, fetchPayments, isAccountActive } from './horizon.js';
 import { formatPi, formatToken } from './util-format.js';
 import { showLoading, hideLoading, showToast, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
@@ -48,20 +48,27 @@ function initWalletAddrMenu() {
   if (walletMenuBound) return;
   walletMenuBound = true;
 
-  document.getElementById('wamenu-watch').addEventListener('click', () => {
+  document.getElementById('wamenu-watch').addEventListener('click', async () => {
     const addr = walletMenuAddr;
     hideWalletAddrMenu();
     if (!addr) return;
     const username = getUsername();
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
     const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
-    registerInHackWatch(username, addr, alias)
-      .then(result => {
-        if (result === 'added')     showToast(t('wallet_ctx_watch_sent'));
-        else if (result === 'duplicate') showToast(t('wallet_ctx_watch_dup'));
-        else if (result === 'full') showToast(t('wallet_ctx_watch_full'));
-      })
-      .catch(() => showToast(t('wallet_ctx_fail')));
+
+    const doAdd = () => {
+      registerInHackWatch(username, addr, alias)
+        .then(result => {
+          if (result === 'added')     showToast(t('wallet_ctx_watch_sent'));
+          else if (result === 'duplicate') showToast(t('wallet_ctx_watch_dup'));
+          else if (result === 'full') showToast(t('wallet_ctx_watch_full'));
+        })
+        .catch(() => showToast(t('wallet_ctx_fail')));
+    };
+
+    const active = await isAccountActive(addr);
+    if (active) doAdd();
+    else showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doAdd);
   });
 
   document.getElementById('wamenu-hack-wallet').addEventListener('click', () => {
@@ -100,13 +107,23 @@ async function sendAddrToHackWallet(addr, alias) {
   const username = getUsername();
   if (!username) { showToast(t('wallet_ctx_fail')); return; }
   const finalAlias = alias || `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
-  try {
-    const result = await registerInHackWallet(username, addr, finalAlias);
-    if (result === 'added')          showToast(t('wallet_ctx_hack_sent'));
-    else if (result === 'duplicate') showToast(t('wallet_ctx_hack_dup'));
-    else if (result === 'full')      showToast(t('wallet_ctx_hack_full'));
-  } catch {
-    showToast(t('wallet_ctx_fail'));
+
+  const doSend = async () => {
+    try {
+      const result = await registerInHackWallet(username, addr, finalAlias);
+      if (result === 'added')          showToast(t('wallet_ctx_hack_sent'));
+      else if (result === 'duplicate') showToast(t('wallet_ctx_hack_dup'));
+      else if (result === 'full')      showToast(t('wallet_ctx_hack_full'));
+    } catch {
+      showToast(t('wallet_ctx_fail'));
+    }
+  };
+
+  const active = await isAccountActive(addr);
+  if (active) {
+    await doSend();
+  } else {
+    showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSend);
   }
 }
 
@@ -120,6 +137,25 @@ function openModal(innerHtml) {
   const close = () => overlay.remove();
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   return { overlay, close };
+}
+
+function showConfirmDialog(title, body, onConfirmed) {
+  const { overlay, close } = openModal(`
+    <div class="modal-header">
+      <h2 style="font-size:16px;">${title}</h2>
+      <button class="modal-close" id="cd-x">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;line-height:1.6;margin-bottom:14px;">${body}</p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-outline btn-sm" id="cd-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
+        <button class="btn-primary btn-sm" id="cd-ok" style="flex:1;">${t('wallet_change_save')}</button>
+      </div>
+    </div>
+  `);
+  overlay.querySelector('#cd-x').onclick      = close;
+  overlay.querySelector('#cd-cancel').onclick = close;
+  overlay.querySelector('#cd-ok').onclick     = () => { close(); onConfirmed(); };
 }
 
 // ─── Add wallet dialog ──────────────────────────────────────────────────────
@@ -176,15 +212,26 @@ function showAddDialog(currentWallets, onSaved) {
 
     const wallet = { id: genId(), address: addr, alias };
     saveBtn.disabled = true;
-    try {
-      await saveWalletsServer(username, [...currentWallets, wallet]);
-      setActiveId(wallet.id);
-      close();
-      onSaved();
-    } catch {
-      errEl.textContent = t('wallet_cloud_err');
-      errEl.style.display = '';
+
+    const doSave = async () => {
+      try {
+        await saveWalletsServer(username, [...currentWallets, wallet]);
+        setActiveId(wallet.id);
+        close();
+        onSaved();
+      } catch {
+        errEl.textContent = t('wallet_cloud_err');
+        errEl.style.display = '';
+        saveBtn.disabled = false;
+      }
+    };
+
+    const active = await isAccountActive(addr);
+    if (active) {
+      await doSave();
+    } else {
       saveBtn.disabled = false;
+      showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSave);
     }
   };
 }
@@ -527,7 +574,7 @@ export async function renderWallet(container) {
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
       ${wallets.map(w => `
         <button class="wallet-chip${w.id === active.id ? ' active' : ''}"
-          data-wid="${w.id}"
+          data-wid="${w.id}" data-active-check="${w.address}"
           style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px solid ${w.id === active.id ? 'var(--accent)' : 'var(--border)'};background:${w.id === active.id ? 'var(--accent)' : 'transparent'};color:${w.id === active.id ? '#000' : 'var(--text)'};cursor:pointer;white-space:nowrap;">
           ${w.alias}
         </button>`).join('')}
@@ -562,6 +609,15 @@ export async function renderWallet(container) {
       setActiveId(btn.dataset.wid);
       rerenderPage('wallet');
     });
+  });
+
+  // 비활성 지갑 칩에 아이콘 표시 (병렬 조회 후 비동기로 반영)
+  container.querySelectorAll('[data-active-check]').forEach(async (el) => {
+    const addr = el.dataset.activeCheck;
+    const active = await isAccountActive(addr);
+    if (!active && container.isConnected) {
+      el.insertAdjacentHTML('afterbegin', `<span title="${t('wallet_not_activated_icon_title')}">⚠️ </span>`);
+    }
   });
 
   initWalletAddrMenu();
