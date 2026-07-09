@@ -14,6 +14,8 @@ const STRINGS = {
   // ── Nav ──
   nav_dex:          { ko:'덱스',   en:'DEX',       id:'DEX',       zh:'交易所', ja:'DEX',         es:'DEX',      vi:'DEX',      hi:'DEX',         pt:'DEX',       tl:'DEX',       fr:'DEX' },
   nav_tools:        { ko:'계산기',  en:'Tools',     id:'Alat',      zh:'工具',   ja:'ツール',      es:'Herramientas', vi:'Công cụ', hi:'टूल्स',   pt:'Ferramentas', tl:'Tools',    fr:'Outils' },
+  nav_lp:           { ko:'LP 계산기', en:'LP Calculator', id:'Kalkulator LP', zh:'LP 计算器', ja:'LP計算機', es:'Calculadora LP', vi:'Máy tính LP', hi:'LP कैलकुलेटर', pt:'Calculadora LP', tl:'LP Calculator', fr:'Calculatrice LP' },
+  nav_swap:         { ko:'스왑 시뮬레이터', en:'Swap Simulator', id:'Simulator Swap', zh:'兑换模拟器', ja:'スワップシミュレーター', es:'Simulador de Swap', vi:'Trình mô phỏng Swap', hi:'Swap सिम्युलेटर', pt:'Simulador de Swap', tl:'Swap Simulator', fr:'Simulateur de Swap' },
   nav_mm:           { ko:'MM',   en:'MM',        id:'MM',        zh:'MM',     ja:'MM',          es:'MM',       vi:'MM',       hi:'MM',        pt:'MM',        tl:'MM',       fr:'MM' },
   nav_arb:          { ko:'차익 탐색', en:'Arb Finder', id:'Arb Finder', zh:'套利查找', ja:'アービトラージ', es:'Arb Finder', vi:'Tìm Arb', hi:'आर्बिट्राज', pt:'Arb Finder', tl:'Arb Finder', fr:'Arb Finder' },
   nav_wallet:       { ko:'지갑',   en:'Wallet',    id:'Dompet',    zh:'钱包',   ja:'ウォレット',  es:'Cartera',  vi:'Ví',       hi:'वॉलेट',      pt:'Carteira',  tl:'Wallet',    fr:'Portefeuille' },
