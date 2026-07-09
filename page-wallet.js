@@ -68,7 +68,7 @@ function initWalletAddrMenu() {
 
     const active = await isAccountActive(addr);
     if (active) doAdd();
-    else showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doAdd);
+    else showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doAdd, t('wallet_continue'));
   });
 
   document.getElementById('wamenu-hack-wallet').addEventListener('click', () => {
@@ -123,7 +123,7 @@ async function sendAddrToHackWallet(addr, alias) {
   if (active) {
     await doSend();
   } else {
-    showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSend);
+    showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSend, t('wallet_continue'));
   }
 }
 
@@ -139,7 +139,7 @@ function openModal(innerHtml) {
   return { overlay, close };
 }
 
-function showConfirmDialog(title, body, onConfirmed) {
+function showConfirmDialog(title, body, onConfirmed, okLabel) {
   const { overlay, close } = openModal(`
     <div class="modal-header">
       <h2 style="font-size:16px;">${title}</h2>
@@ -149,7 +149,7 @@ function showConfirmDialog(title, body, onConfirmed) {
       <p style="font-size:13px;line-height:1.6;margin-bottom:14px;">${body}</p>
       <div style="display:flex;gap:8px;">
         <button class="btn-outline btn-sm" id="cd-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
-        <button class="btn-primary btn-sm" id="cd-ok" style="flex:1;">${t('wallet_change_save')}</button>
+        <button class="btn-primary btn-sm" id="cd-ok" style="flex:1;">${okLabel ?? t('wallet_change_save')}</button>
       </div>
     </div>
   `);
@@ -231,7 +231,7 @@ function showAddDialog(currentWallets, onSaved) {
       await doSave();
     } else {
       saveBtn.disabled = false;
-      showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSave);
+      showConfirmDialog(t('wallet_not_activated_title'), t('wallet_not_activated_confirm'), doSave, t('wallet_continue'));
     }
   };
 }
