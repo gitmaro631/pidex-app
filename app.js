@@ -8,17 +8,17 @@ import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
   version: '2026-07-09',
-  ko: '📢 업데이트 안내\n\n① 버튼명 변경 — 서버에 백업 / 기기에 복원\n② 지갑이 비어있을 때 백업 시도 시 경고창 추가\n③ 지갑 화면 순서 — 보유토큰 → 이체내역 → LP → 연결토큰',
-  en: '📢 Update Notice\n\n① Button renamed — Back Up to Server / Restore to Device\n② Warning added when backing up with empty wallet list\n③ Wallet screen order — Tokens → Transactions → LP → Trustlines',
-  id: '📢 Pemberitahuan Pembaruan\n\n① Nama tombol diubah — Cadangkan ke Server / Pulihkan ke Perangkat\n② Peringatan saat backup dengan daftar dompet kosong\n③ Urutan layar dompet — Token → Transaksi → LP → Trustline',
-  zh: '📢 更新通知\n\n① 按钮名称更改 — 备份到服务器 / 恢复到设备\n② 钱包为空时备份会弹出警告\n③ 钱包页面顺序 — 持有代币 → 转账记录 → LP → 连接代币',
-  ja: '📢 アップデートのお知らせ\n\n① ボタン名変更 — サーバーに保存 / 端末に復元\n② 空のウォレットでバックアップ時に警告表示\n③ ウォレット画面の順番 — 保有トークン → 履歴 → LP → 連携トークン',
-  es: '📢 Aviso de actualización\n\n① Nombre de botón cambiado — Guardar en servidor / Restaurar en dispositivo\n② Advertencia al hacer backup con lista vacía\n③ Orden de pantalla — Tokens → Transacciones → LP → Trustlines',
-  vi: '📢 Thông báo cập nhật\n\n① Đổi tên nút — Sao lưu lên server / Khôi phục về thiết bị\n② Cảnh báo khi sao lưu với danh sách ví trống\n③ Thứ tự màn hình ví — Token → Giao dịch → LP → Trustline',
-  hi: '📢 अपडेट सूचना\n\n① बटन का नाम बदला — सर्वर पर बैकअप / डिवाइस पर पुनर्स्थापित करें\n② खाली वॉलेट सूची पर बैकअप करने पर चेतावनी\n③ वॉलेट स्क्रीन का क्रम — टोकन → लेनदेन → LP → ट्रस्टलाइन',
-  pt: '📢 Aviso de atualização\n\n① Nome do botão alterado — Backup no servidor / Restaurar no dispositivo\n② Aviso ao fazer backup com lista vazia\n③ Ordem da tela de carteira — Tokens → Transações → LP → Trustlines',
-  tl: '📢 Abiso sa Update\n\n① Binago ang pangalan ng button — I-backup sa server / I-restore sa device\n② May babala kapag nag-backup ng walang laman na listahan\n③ Pagkakasunod ng wallet screen — Tokens → Transaksyon → LP → Trustlines',
-  fr: "📢 Avis de mise à jour\n\n① Bouton renommé — Sauvegarder sur serveur / Restaurer sur l'appareil\n② Avertissement lors d'une sauvegarde avec liste vide\n③ Ordre de l'écran — Tokens → Transactions → LP → Trustlines",
+  ko: '📢 업데이트 안내\n\n① 버튼명 변경 — 서버에 백업 / 기기에 복원\n② 지갑이 비어있을 때 백업 시도 시 경고창 추가\n③ 지갑 화면 순서 — 보유토큰 → 이체내역 → LP → 연결토큰\n④ MM 탭 추가 — 실거래 데이터 기반 마켓메이킹 백테스터(오더북/AMM/자동최적화)',
+  en: '📢 Update Notice\n\n① Button renamed — Back Up to Server / Restore to Device\n② Warning added when backing up with empty wallet list\n③ Wallet screen order — Tokens → Transactions → LP → Trustlines\n④ New MM tab — market-making backtester (orderbook/AMM/auto-optimize) using real trade data',
+  id: '📢 Pemberitahuan Pembaruan\n\n① Nama tombol diubah — Cadangkan ke Server / Pulihkan ke Perangkat\n② Peringatan saat backup dengan daftar dompet kosong\n③ Urutan layar dompet — Token → Transaksi → LP → Trustline\n④ Tab MM baru — backtester market-making (orderbook/AMM/auto-optimize) dengan data transaksi nyata',
+  zh: '📢 更新通知\n\n① 按钮名称更改 — 备份到服务器 / 恢复到设备\n② 钱包为空时备份会弹出警告\n③ 钱包页面顺序 — 持有代币 → 转账记录 → LP → 连接代币\n④ 新增MM标签 — 基于真实交易数据的做市回测工具（订单簿/AMM/自动优化）',
+  ja: '📢 アップデートのお知らせ\n\n① ボタン名変更 — サーバーに保存 / 端末に復元\n② 空のウォレットでバックアップ時に警告表示\n③ ウォレット画面の順番 — 保有トークン → 履歴 → LP → 連携トークン\n④ MMタブ追加 — 実取引データに基づくマーケットメイキング バックテスター（オーダーブック/AMM/自動最適化）',
+  es: '📢 Aviso de actualización\n\n① Nombre de botón cambiado — Guardar en servidor / Restaurar en dispositivo\n② Advertencia al hacer backup con lista vacía\n③ Orden de pantalla — Tokens → Transacciones → LP → Trustlines\n④ Nueva pestaña MM — backtester de creación de mercado (orderbook/AMM/auto-optimización) con datos reales',
+  vi: '📢 Thông báo cập nhật\n\n① Đổi tên nút — Sao lưu lên server / Khôi phục về thiết bị\n② Cảnh báo khi sao lưu với danh sách ví trống\n③ Thứ tự màn hình ví — Token → Giao dịch → LP → Trustline\n④ Thêm tab MM — công cụ backtest market-making (orderbook/AMM/tự động tối ưu) với dữ liệu giao dịch thực',
+  hi: '📢 अपडेट सूचना\n\n① बटन का नाम बदला — सर्वर पर बैकअप / डिवाइस पर पुनर्स्थापित करें\n② खाली वॉलेट सूची पर बैकअप करने पर चेतावनी\n③ वॉलेट स्क्रीन का क्रम — टोकन → लेनदेन → LP → ट्रस्टलाइन\n④ नया MM टैब — वास्तविक ट्रेड डेटा पर आधारित मार्केट-मेकिंग बैकटेस्टर (orderbook/AMM/ऑटो-ऑप्टिमाइज)',
+  pt: '📢 Aviso de atualização\n\n① Nome do botão alterado — Backup no servidor / Restaurar no dispositivo\n② Aviso ao fazer backup com lista vazia\n③ Ordem da tela de carteira — Tokens → Transações → LP → Trustlines\n④ Nova aba MM — backtester de market-making (orderbook/AMM/auto-otimização) com dados reais de negociação',
+  tl: '📢 Abiso sa Update\n\n① Binago ang pangalan ng button — I-backup sa server / I-restore sa device\n② May babala kapag nag-backup ng walang laman na listahan\n③ Pagkakasunod ng wallet screen — Tokens → Transaksyon → LP → Trustlines\n④ Bagong MM tab — market-making backtester (orderbook/AMM/auto-optimize) gamit ang tunay na datos ng trade',
+  fr: "📢 Avis de mise à jour\n\n① Bouton renommé — Sauvegarder sur serveur / Restaurer sur l'appareil\n② Avertissement lors d'une sauvegarde avec liste vide\n③ Ordre de l'écran — Tokens → Transactions → LP → Trustlines\n④ Nouvel onglet MM — backtesteur de market-making (carnet d'ordres/AMM/auto-optimisation) avec données réelles",
 };
 import { isSubscribed } from './util-storage.js';
 import { importPendingWallets, getDb } from './firebase-wallet.js';
