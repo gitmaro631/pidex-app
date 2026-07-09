@@ -282,22 +282,6 @@ function renderUtilsOverlay() {
     </div>
     <div class="utils-body">
 
-    <a class="util-card" href="#" onclick="window.open('https://mmstrategylabqge3450.pinet.com/', '_hub_'+Date.now());return false;">
-      <div class="util-card-icon">
-        <img src="icons/mmlab.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="MM Strategy Lab">
-      </div>
-      <div class="util-card-body">
-        <div class="util-card-name">MM Strategy Lab</div>
-        <div class="util-card-tags">
-          <span class="util-tag">Orderbook MM</span>
-          <span class="util-tag">AMM</span>
-          <span class="util-tag">Auto Optimize</span>
-        </div>
-        <div class="util-card-desc">${t('hub_mmlab_desc')}</div>
-        <div class="util-card-link">${t('hub_open')}</div>
-      </div>
-    </a>
-
     <a class="util-card" href="#" onclick="window.open('https://quizpisgn2184.pinet.com', '_hub_'+Date.now());return false;">
       <div class="util-card-icon">
         <img src="icons/pidex-quiz.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="PiDEX Quiz">
@@ -311,38 +295,6 @@ function renderUtilsOverlay() {
         </div>
         <div class="util-card-desc">${t('hub_quiz_desc')}</div>
         <div class="util-card-link">${t('hub_open')}</div>
-      </div>
-    </a>
-
-    <a class="util-card" href="#" onclick="return false;" style="opacity:0.6;cursor:default;">
-      <div class="util-card-icon">
-        <img src="icons/hack-tracker.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="Pi Hack Tracker">
-      </div>
-      <div class="util-card-body">
-        <div class="util-card-name">Pi Hack Tracker</div>
-        <div class="util-card-tags">
-          <span class="util-tag">Hack Report</span>
-          <span class="util-tag">Wallet Trace</span>
-          <span class="util-tag">Community</span>
-        </div>
-        <div class="util-card-desc">${t('hub_hack_desc')}</div>
-        <div class="util-card-link" style="color:#888;">${t('hub_coming_soon')}</div>
-      </div>
-    </a>
-
-    <a class="util-card" href="#" onclick="return false;" style="opacity:0.6;cursor:default;">
-      <div class="util-card-icon">
-        <img src="icons/survival.png" width="64" height="64" style="border-radius:14px;display:block;object-fit:cover;" alt="Pi Survival Game">
-      </div>
-      <div class="util-card-body">
-        <div class="util-card-name">Pi Survival Game</div>
-        <div class="util-card-tags">
-          <span class="util-tag">Survival</span>
-          <span class="util-tag">Text RPG</span>
-          <span class="util-tag">11 Maps</span>
-        </div>
-        <div class="util-card-desc">${t('hub_survival_desc')}</div>
-        <div class="util-card-link" style="color:#888;">${t('hub_coming_soon')}</div>
       </div>
     </a>
     </div>
