@@ -158,6 +158,166 @@ function showConfirmDialog(title, body, onConfirmed, okLabel) {
   overlay.querySelector('#cd-ok').onclick     = () => { close(); onConfirmed(); };
 }
 
+// ─── 클라우드 백업/복구 (Google Cloud Storage, 슬롯 5개) ─────────────────────
+
+function dedupeWalletsByAddress(list) {
+  const seen = new Set();
+  const out = [];
+  for (const w of list) {
+    if (seen.has(w.address)) continue;
+    seen.add(w.address);
+    out.push(w);
+  }
+  return out;
+}
+
+async function fetchBackupSlot(category, slot) {
+  const username = getUsername();
+  const res = await fetch('/api/backup/get', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category, username, slot }),
+  });
+  if (!res.ok) throw new Error('backup get failed');
+  return res.json();
+}
+
+async function putBackupSlot(category, slot, wallets) {
+  const username = getUsername();
+  const res = await fetch('/api/backup/put', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category, username, slot, wallets }),
+  });
+  if (!res.ok) throw new Error('backup put failed');
+  return res.json();
+}
+
+function openBackupModal(category, currentWallets, maxCount, onApplied) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box" style="max-width:380px;">
+    <div class="modal-header">
+      <h2 style="font-size:16px;">☁️ ${t('backup_title')}</h2>
+      <button class="modal-close" id="bk-x">✕</button>
+    </div>
+    <div class="modal-body" id="bk-body" style="max-height:70vh;overflow-y:auto;">
+      <p style="color:var(--text-dim);font-size:13px;">${t('wallet_loading')}</p>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector('#bk-x').onclick = () => overlay.remove();
+
+  const bodyEl = overlay.querySelector('#bk-body');
+  let slotsData = [];
+
+  async function loadSlots() {
+    bodyEl.innerHTML = `<p style="color:var(--text-dim);font-size:13px;">${t('wallet_loading')}</p>`;
+    try {
+      slotsData = await Promise.all([1, 2, 3, 4, 5].map(s => fetchBackupSlot(category, s)));
+      renderSlots();
+    } catch {
+      bodyEl.innerHTML = `<p style="color:var(--red);font-size:13px;">${t('backup_load_fail')}</p>`;
+    }
+  }
+
+  function renderSlots() {
+    bodyEl.innerHTML = slotsData.map((s, i) => {
+      const slotNum = i + 1;
+      const empty = !s.exists;
+      const dateStr = empty ? '' : new Date(s.updatedAt).toLocaleString();
+      const aliasPreview = empty ? '' : s.wallets.map(w => w.alias).join(', ');
+      const slotInfo = empty ? t('backup_empty') : `${s.wallets.length} · ${dateStr}`;
+      return `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <b style="font-size:13px;">${t('backup_slot').replace('{n}', slotNum)}</b>
+            <span style="font-size:11px;color:var(--text-dim);">${slotInfo}</span>
+          </div>
+          ${empty ? '' : `<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;word-break:break-all;">${aliasPreview}</div>`}
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="btn-outline btn-sm" data-act="backup-full" data-slot="${slotNum}" style="width:auto;padding:0 10px;">${t('backup_btn_full_backup')}</button>
+            <button class="btn-outline btn-sm" data-act="backup-append" data-slot="${slotNum}" style="width:auto;padding:0 10px;">${t('backup_btn_append_backup')}</button>
+            <button class="btn-outline btn-sm" data-act="restore-full" data-slot="${slotNum}" style="width:auto;padding:0 10px;" ${empty ? 'disabled' : ''}>${t('backup_btn_full_restore')}</button>
+            <button class="btn-outline btn-sm" data-act="restore-append" data-slot="${slotNum}" style="width:auto;padding:0 10px;" ${empty ? 'disabled' : ''}>${t('backup_btn_append_restore')}</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    bodyEl.querySelectorAll('[data-act]').forEach(btn => {
+      btn.addEventListener('click', () => handleAction(btn.dataset.act, Number(btn.dataset.slot)));
+    });
+  }
+
+  async function handleAction(act, slotNum) {
+    const slotInfo = slotsData[slotNum - 1];
+
+    if (act === 'backup-full') {
+      const msg = slotInfo.exists
+        ? t('backup_confirm_overwrite').replace('{n}', slotNum)
+        : t('backup_confirm_save').replace('{n}', slotNum);
+      showConfirmDialog(t('backup_title'), msg, async () => {
+        try {
+          await putBackupSlot(category, slotNum, currentWallets);
+          showToast(t('backup_saved'));
+          loadSlots();
+        } catch { showToast(t('backup_fail')); }
+      }, t('backup_btn_full_backup'));
+      return;
+    }
+
+    if (act === 'backup-append') {
+      const existing = slotInfo.exists ? slotInfo.wallets : [];
+      const merged = dedupeWalletsByAddress([...existing, ...currentWallets]);
+      const doSave = async (list) => {
+        try {
+          await putBackupSlot(category, slotNum, list);
+          showToast(t('backup_saved'));
+          loadSlots();
+        } catch { showToast(t('backup_fail')); }
+      };
+      if (merged.length > maxCount) {
+        const msg = t('backup_confirm_truncate').replace('{n}', maxCount).replace('{dropped}', merged.length - maxCount);
+        showConfirmDialog(t('backup_title'), msg, () => doSave(merged.slice(0, maxCount)), t('wallet_continue'));
+      } else {
+        await doSave(merged);
+      }
+      return;
+    }
+
+    if (act === 'restore-full') {
+      const msg = t('backup_confirm_restore_full').replace('{n}', slotNum);
+      showConfirmDialog(t('backup_title'), msg, async () => {
+        try {
+          await onApplied(slotInfo.wallets);
+          overlay.remove();
+        } catch { showToast(t('backup_fail')); }
+      }, t('backup_btn_full_restore'));
+      return;
+    }
+
+    if (act === 'restore-append') {
+      const merged = dedupeWalletsByAddress([...currentWallets, ...slotInfo.wallets]);
+      const doRestore = async (list) => {
+        try {
+          await onApplied(list);
+          overlay.remove();
+        } catch { showToast(t('backup_fail')); }
+      };
+      if (merged.length > maxCount) {
+        const msg = t('backup_confirm_truncate').replace('{n}', maxCount).replace('{dropped}', merged.length - maxCount);
+        showConfirmDialog(t('backup_title'), msg, () => doRestore(merged.slice(0, maxCount)), t('wallet_continue'));
+      } else {
+        await doRestore(merged);
+      }
+      return;
+    }
+  }
+
+  loadSlots();
+}
+
 // ─── Add wallet dialog ──────────────────────────────────────────────────────
 
 function showAddDialog(currentWallets, onSaved) {
@@ -589,7 +749,10 @@ export async function renderWallet(container) {
     <div class="page-content">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <h2 class="page-title" style="margin:0;">${t('wallet_title')} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(${wallets.length}/${PIDEX_WALLET_MAX})</span></h2>
-        <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-outline btn-sm" id="btn-wallet-backup" style="width:auto;padding:0 12px;">☁️</button>
+          <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
+        </div>
       </div>
       ${selectorHtml}
       <div id="wallet-detail" style="margin-top:16px;"></div>
@@ -599,6 +762,13 @@ export async function renderWallet(container) {
   setupPullToRefresh(container, () => rerenderPage('wallet'));
 
   container.querySelector('#btn-wallet-refresh').addEventListener('click', () => rerenderPage('wallet'));
+
+  container.querySelector('#btn-wallet-backup').addEventListener('click', () => {
+    openBackupModal('testnet', wallets, PIDEX_WALLET_MAX, async (newList) => {
+      await saveWalletsServer(username, newList);
+      rerenderPage('wallet');
+    });
+  });
 
   container.querySelector('#btn-add-wallet')?.addEventListener('click', () => {
     showAddDialog(wallets, () => rerenderPage('wallet'));
