@@ -487,7 +487,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
 function txRowHtml(op, walletAlias) {
   const isIn   = op.isIncoming;
   const other  = isIn ? op.from : op.to;
-  const short  = other ? `${other.slice(0, 6)}···${other.slice(-4)}` : '?';
+  const short  = other ? `${other.slice(0, 4)}···${other.slice(-3)}` : '?';
   const asset  = op.asset_code ?? (op.asset_type === 'native' ? 'π' : (op.asset_type ?? '?'));
   const amount = parseFloat(op.amount ?? 0).toFixed(2);
   const date   = op.created_at ? new Date(op.created_at).toLocaleDateString() : '';
@@ -495,10 +495,10 @@ function txRowHtml(op, walletAlias) {
   const dir    = isIn ? t('wallet_tx_recv') : t('wallet_tx_sent');
   const arrow  = isIn ? '↙' : '↗';
 
-  const myChip    = `<span style="background:rgba(255,255,255,0.10);padding:2px 7px;border-radius:4px;color:var(--accent);font-weight:600;">${walletAlias}</span>`;
+  const myChip    = `<span style="background:rgba(255,255,255,0.10);padding:5px 9px;border-radius:4px;color:var(--accent);font-weight:600;">${walletAlias}</span>`;
   const otherChip = other
-    ? `<span data-copy-addr="${other}" style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;color:#999;font-family:monospace;cursor:pointer;">${short}</span>`
-    : `<span style="background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;color:#999;font-family:monospace;">?</span>`;
+    ? `<span data-copy-addr="${other}" style="background:rgba(255,255,255,0.06);padding:5px 9px;border-radius:4px;color:#999;font-family:monospace;cursor:pointer;">${short}</span>`
+    : `<span style="background:rgba(255,255,255,0.06);padding:5px 9px;border-radius:4px;color:#999;font-family:monospace;">?</span>`;
   const fromChip  = isIn ? otherChip : myChip;
   const toChip    = isIn ? myChip    : otherChip;
 
@@ -508,7 +508,7 @@ function txRowHtml(op, walletAlias) {
         <span style="font-size:11px;font-weight:600;color:${color};">${arrow} ${dir}</span>
         <span style="font-size:13px;font-weight:700;color:${color};">${amount} ${asset}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:4px;font-size:11px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:4px;font-size:13px;flex-wrap:wrap;">
         ${fromChip}
         <span style="color:#555;font-size:13px;">──→</span>
         ${toChip}
@@ -605,7 +605,7 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px;">${wallet.alias}</div>
-          <div data-copy-addr="${wallet.address}" style="font-size:11px;color:#888;font-family:monospace;cursor:pointer;">${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</div>
+          <div data-copy-addr="${wallet.address}" style="font-size:14px;color:#888;font-family:monospace;cursor:pointer;padding:5px 3px;display:inline-block;">${wallet.address.slice(0, 5)}···${wallet.address.slice(-4)}</div>
         </div>
         <div style="display:flex;gap:4px;">
           <button class="btn-outline btn-sm" id="btn-edit-alias" style="padding:0 8px;font-size:12px;">✏️</button>
