@@ -547,27 +547,38 @@ function runOrderbookBacktest(trades, p) {
     stopIdx = i;
 
     if (i > 0) {
-      const priceUp  = mid >= trades[i - 1].price;
+      const prevMid  = trades[i - 1].price;
+      const priceUp  = mid >= prevMid;
       const orderAmt = total * (p.orderSizePct / 100);
+      // 그 틱에 실제로 체결된 네이티브 자산 수량 — 내 주문이 그 이상은 체결될 수 없다는 유동성 한도 근사치
+      const availNative = trades[i].baseAmt || 0;
 
       for (let layer = 1; layer <= p.layers; layer++) {
-        const bid      = mid * (1 - halfSpread * layer);
-        const ask      = mid * (1 + halfSpread * layer);
+        const bid      = prevMid * (1 - halfSpread * layer);
+        const ask      = prevMid * (1 + halfSpread * layer);
         const layerAmt = orderAmt / p.layers;
 
         if (!priceUp && mid <= bid && usdc >= layerAmt) {
-          const bought = layerAmt / bid;
-          const f      = layerAmt * fee;
-          usdc -= (layerAmt + f); native += bought; fees += f; fills++;
-          log.push({ type: 'buy', msg: `↓ ${tr(S.log_buy)} ${bought.toFixed(2)} @ ${bid.toFixed(5)} (L${layer})` });
+          const wanted = layerAmt / bid;
+          const bought = Math.min(wanted, availNative);
+          if (bought > 0) {
+            const cost = bought * bid;
+            const f    = cost * fee;
+            usdc -= (cost + f); native += bought; fees += f; fills++;
+            log.push({ type: 'buy', msg: `↓ ${tr(S.log_buy)} ${bought.toFixed(2)} @ ${bid.toFixed(5)} (L${layer})` });
+          }
         }
 
         if (priceUp && mid >= ask && native * mid >= layerAmt) {
-          const sold = layerAmt / ask;
-          const f    = layerAmt * fee;
-          usdc += (layerAmt - f); native -= sold; fees += f; fills++;
-          profit += layerAmt * (p.spreadPct / 100 / p.layers) - f;
-          log.push({ type: 'sell', msg: `↑ ${tr(S.log_sell)} ${sold.toFixed(2)} @ ${ask.toFixed(5)} (L${layer})` });
+          const wanted = layerAmt / ask;
+          const sold   = Math.min(wanted, availNative);
+          if (sold > 0) {
+            const proceeds = sold * ask;
+            const f        = proceeds * fee;
+            usdc += (proceeds - f); native -= sold; fees += f; fills++;
+            profit += proceeds * (p.spreadPct / 100 / p.layers) - f;
+            log.push({ type: 'sell', msg: `↑ ${tr(S.log_sell)} ${sold.toFixed(2)} @ ${ask.toFixed(5)} (L${layer})` });
+          }
         }
       }
     }
@@ -1539,7 +1550,7 @@ async function runAutoScan() {
           for (const split of [40, 50, 60]) {
             const p = {
               records, totalUsdc: capital, splitRatio: split, spreadPct: spread,
-              orderSizePct: 3, layers: 1, stopRatio: 70, feePct: 0.3, surgeTicks: 3, surgePct: 1.5,
+              orderSizePct: 3, layers: 1, stopRatio: 70, feePct: 0, surgeTicks: 3, surgePct: 1.5,
             };
             const r = runOrderbookBacktest(trades, p);
             if (r.roi > bestRoi) { bestRoi = r.roi; bestResult = r; bestParams = p; }
