@@ -3,6 +3,11 @@
 // ═══════════════════════════════════════════════════════
 import { getLang } from './i18n.js';
 import { isSubscribed } from './util-storage.js';
+import { currentUser } from './pi-sdk.js';
+import { showToast } from './app.js';
+import { fetchLpPositionsServer, saveLpPositionsServer, LP_POSITION_MAX } from './firebase-wallet.js';
+
+function getUsername() { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
 
 // ── i18n (11개 언어: ko/en/id/zh/ja/es/vi/hi/pt/tl/fr) ──
 const S = {
@@ -155,6 +160,31 @@ const S = {
   opt_spread: { ko:'스프레드', en:'Spread', id:'Spread', zh:'价差', ja:'スプレッド', es:'Spread', vi:'Chênh lệch', hi:'स्प्रेड', pt:'Spread', tl:'Spread', fr:'Écart' },
   opt_ratio:  { ko:'비율', en:'Ratio', id:'Rasio', zh:'比率', ja:'比率', es:'Ratio', vi:'Tỷ lệ', hi:'अनुपात', pt:'Razão', tl:'Ratio', fr:'Ratio' },
   opt_fills:  { ko:'체결', en:'fills', id:'fill', zh:'成交', ja:'約定', es:'fills', vi:'khớp', hi:'फिल', pt:'fills', tl:'fills', fr:'fills' },
+
+  sec_backtest: { ko:'백테스트', en:'Backtest', id:'Backtest', zh:'回测', ja:'バックテスト', es:'Backtest', vi:'Backtest', hi:'बैकटेस्ट', pt:'Backtest', tl:'Backtest', fr:'Backtest' },
+  sec_tracking: { ko:'내 LP 추적', en:'My LP Tracking', id:'Pelacakan LP Saya', zh:'我的LP追踪', ja:'マイLP追跡', es:'Seguimiento de mi LP', vi:'Theo dõi LP của tôi', hi:'मेरी LP ट्रैकिंग', pt:'Rastreamento da minha LP', tl:'Aking LP Tracking', fr:'Suivi de mon LP' },
+  track_title:  { ko:'내 LP 포지션', en:'My LP Positions', id:'Posisi LP Saya', zh:'我的LP仓位', ja:'マイLPポジション', es:'Mis posiciones LP', vi:'Vị thế LP của tôi', hi:'मेरी LP पोजीशन', pt:'Minhas posições LP', tl:'Aking mga LP Position', fr:'Mes positions LP' },
+  track_empty:  { ko:'등록된 포지션이 없습니다. AMM 백테스트 결과 화면에서 등록할 수 있어요.', en:'No positions registered. You can register one from the AMM backtest result screen.', id:'Belum ada posisi. Anda bisa mendaftar dari layar hasil backtest AMM.', zh:'尚未注册仓位。可在AMM回测结果页面注册。', ja:'登録されたポジションがありません。AMMバックテスト結果画面から登録できます。', es:'No hay posiciones registradas. Puede registrar una desde la pantalla de resultados del backtest AMM.', vi:'Chưa có vị thế nào. Bạn có thể đăng ký từ màn hình kết quả backtest AMM.', hi:'कोई पोजीशन पंजीकृत नहीं। AMM बैकटेस्ट परिणाम स्क्रीन से पंजीकृत करें।', pt:'Nenhuma posição registrada. Você pode registrar na tela de resultados do backtest AMM.', tl:'Walang nakarehistrong position. Maaari kang magrehistro mula sa AMM backtest result screen.', fr:"Aucune position enregistrée. Vous pouvez en enregistrer une depuis l'écran de résultats du backtest AMM." },
+  track_goto_backtest: { ko:'백테스트로 이동', en:'Go to Backtest', id:'Ke Backtest', zh:'前往回测', ja:'バックテストへ', es:'Ir al Backtest', vi:'Đến Backtest', hi:'बैकटेस्ट पर जाएं', pt:'Ir para o Backtest', tl:'Pumunta sa Backtest', fr:'Aller au Backtest' },
+  track_add_title: { ko:'포지션 등록', en:'Register Position', id:'Daftarkan Posisi', zh:'注册仓位', ja:'ポジション登録', es:'Registrar Posición', vi:'Đăng ký vị thế', hi:'पोजीशन पंजीकृत करें', pt:'Registrar Posição', tl:'Irehistro ang Position', fr:'Enregistrer la Position' },
+  track_alias_ph:  { ko:'별칭 (예: XLM/USDC 메인)', en:'Alias (e.g. XLM/USDC Main)', id:'Alias (mis. XLM/USDC Utama)', zh:'别名（例：XLM/USDC主）', ja:'エイリアス（例：XLM/USDCメイン）', es:'Alias (ej. XLM/USDC Principal)', vi:'Biệt danh (vd: XLM/USDC Chính)', hi:'उपनाम (जैसे XLM/USDC मुख्य)', pt:'Apelido (ex. XLM/USDC Principal)', tl:'Alias (hal. XLM/USDC Main)', fr:'Alias (ex. XLM/USDC Principal)' },
+  track_deposit_ph:{ ko:'예치 가치 (USDC)', en:'Deposit value (USDC)', id:'Nilai deposit (USDC)', zh:'存款价值（USDC）', ja:'預入価値（USDC）', es:'Valor del depósito (USDC)', vi:'Giá trị gửi (USDC)', hi:'जमा मूल्य (USDC)', pt:'Valor do depósito (USDC)', tl:'Halaga ng deposit (USDC)', fr:'Valeur du dépôt (USDC)' },
+  track_wallet_ph: { ko:'지갑 주소 (선택, G...)', en:'Wallet address (optional, G...)', id:'Alamat dompet (opsional, G...)', zh:'钱包地址（可选，G...）', ja:'ウォレットアドレス（任意、G...）', es:'Dirección de cartera (opcional, G...)', vi:'Địa chỉ ví (tùy chọn, G...)', hi:'वॉलेट पता (वैकल्पिक, G...)', pt:'Endereço da carteira (opcional, G...)', tl:'Wallet address (opsyonal, G...)', fr:'Adresse du portefeuille (facultatif, G...)' },
+  track_wallet_hint: { ko:'지갑을 등록하면 실제 보유 지분으로 정확히 계산됩니다', en:'If you add a wallet, we use its real LP share balance for exact tracking', id:'Jika menambahkan dompet, kami gunakan saldo LP nyata untuk pelacakan akurat', zh:'添加钱包后将使用真实LP份额进行精确计算', ja:'ウォレットを登録すると実際の保有持分で正確に計算されます', es:'Si añade una cartera, usamos su saldo real de LP para un seguimiento exacto', vi:'Nếu thêm ví, chúng tôi dùng số dư LP thực để theo dõi chính xác', hi:'वॉलेट जोड़ने पर वास्तविक LP शेयर बैलेंस से सटीक ट्रैकिंग होगी', pt:'Se adicionar uma carteira, usamos o saldo real de LP para rastreamento exato', tl:'Kung magdagdag ka ng wallet, gagamitin namin ang tunay na LP share balance', fr:'Si vous ajoutez un portefeuille, nous utilisons son solde LP réel pour un suivi exact' },
+  track_delete_confirm: { ko:'이 포지션을 삭제할까요?', en:'Delete this position?', id:'Hapus posisi ini?', zh:'删除此仓位？', ja:'このポジションを削除しますか？', es:'¿Eliminar esta posición?', vi:'Xóa vị thế này?', hi:'इस पोजीशन को हटाएं?', pt:'Excluir esta posição?', tl:'Tanggalin ang position na ito?', fr:'Supprimer cette position ?' },
+  track_no_shares: { ko:'⚠️ 이 지갑은 현재 지분이 없습니다 (인출된 것으로 보임)', en:'⚠️ This wallet currently holds no shares (likely withdrawn)', id:'⚠️ Dompet ini tidak memiliki saham (kemungkinan sudah ditarik)', zh:'⚠️ 该钱包目前没有份额（可能已提取）', ja:'⚠️ このウォレットは現在持分がありません（引き出し済みの可能性）', es:'⚠️ Esta cartera actualmente no tiene participaciones (probablemente retiradas)', vi:'⚠️ Ví này hiện không có cổ phần (có thể đã rút)', hi:'⚠️ इस वॉलेट में फिलहाल कोई हिस्सा नहीं (शायद निकाला गया)', pt:'⚠️ Esta carteira atualmente não possui cotas (provavelmente retiradas)', tl:'⚠️ Walang shares ang wallet na ito ngayon (posibleng na-withdraw na)', fr:"⚠️ Ce portefeuille ne détient actuellement aucune part (probablement retirée)" },
+  track_approx: { ko:'근사치 (수수료 미포함)', en:'Approximate (fees not included)', id:'Perkiraan (biaya tidak termasuk)', zh:'近似值（不含手续费）', ja:'概算（手数料含まず）', es:'Aproximado (sin comisiones)', vi:'Gần đúng (chưa gồm phí)', hi:'अनुमानित (शुल्क शामिल नहीं)', pt:'Aproximado (sem taxas)', tl:'Approximate (hindi kasama ang bayad)', fr:'Approximatif (frais non inclus)' },
+  track_exact:  { ko:'실계좌 기준 (정확)', en:'Based on real wallet (exact)', id:'Berdasarkan dompet nyata (akurat)', zh:'基于真实钱包（精确）', ja:'実ウォレット基準（正確）', es:'Basado en cartera real (exacto)', vi:'Dựa trên ví thực (chính xác)', hi:'वास्तविक वॉलेट आधारित (सटीक)', pt:'Baseado na carteira real (exato)', tl:'Batay sa tunay na wallet (eksakto)', fr:'Basé sur le portefeuille réel (exact)' },
+  track_register_btn: { ko:'오늘 예치 등록', en:'Register Today’s Deposit', id:'Daftarkan Deposit Hari Ini', zh:'注册今日存款', ja:'本日の預入を登録', es:'Registrar depósito de hoy', vi:'Đăng ký gửi hôm nay', hi:'आज का जमा पंजीकृत करें', pt:'Registrar depósito de hoje', tl:'Irehistro ang Deposit Ngayon', fr:"Enregistrer le dépôt d'aujourd'hui" },
+  track_registered_toast: { ko:'등록 완료', en:'Registered', id:'Terdaftar', zh:'已注册', ja:'登録完了', es:'Registrado', vi:'Đã đăng ký', hi:'पंजीकृत', pt:'Registrado', tl:'Nairehistro', fr:'Enregistré' },
+  track_load_fail: { ko:'불러오기 실패 (로그인이 필요할 수 있어요)', en:'Failed to load (login may be required)', id:'Gagal memuat (mungkin perlu login)', zh:'加载失败（可能需要登录）', ja:'読み込み失敗（ログインが必要な場合があります）', es:'Error al cargar (puede requerir inicio de sesión)', vi:'Tải thất bại (có thể cần đăng nhập)', hi:'लोड विफल (लॉगिन आवश्यक हो सकता है)', pt:'Falha ao carregar (login pode ser necessário)', tl:'Nabigo ang pag-load (maaaring kailangan mag-login)', fr:'Échec du chargement (connexion peut-être requise)' },
+  track_fail: { ko:'오류가 발생했습니다', en:'An error occurred', id:'Terjadi kesalahan', zh:'发生错误', ja:'エラーが発生しました', es:'Ocurrió un error', vi:'Đã xảy ra lỗi', hi:'एक त्रुटि हुई', pt:'Ocorreu um erro', tl:'May naganap na error', fr:'Une erreur est survenue' },
+  track_date: { ko:'등록일', en:'Registered', id:'Terdaftar', zh:'注册日期', ja:'登録日', es:'Registrado', vi:'Ngày đăng ký', hi:'पंजीकरण तिथि', pt:'Registrado em', tl:'Petsa ng Rehistro', fr:"Date d'enregistrement" },
+  track_current_value: { ko:'현재 가치', en:'Current Value', id:'Nilai Saat Ini', zh:'当前价值', ja:'現在価値', es:'Valor Actual', vi:'Giá trị hiện tại', hi:'वर्तमान मूल्य', pt:'Valor Atual', tl:'Kasalukuyang Halaga', fr:'Valeur Actuelle' },
+  track_entry_value: { ko:'예치 시 가치', en:'Value at Entry', id:'Nilai saat Masuk', zh:'存入时价值', ja:'預入時価値', es:'Valor al Ingresar', vi:'Giá trị lúc gửi', hi:'प्रवेश पर मूल्य', pt:'Valor na Entrada', tl:'Halaga sa Entry', fr:"Valeur à l'Entrée" },
+  track_save: { ko:'등록', en:'Register', id:'Daftar', zh:'注册', ja:'登録', es:'Registrar', vi:'Đăng ký', hi:'पंजीकृत करें', pt:'Registrar', tl:'Irehistro', fr:'Enregistrer' },
+  track_no_login: { ko:'Pi 로그인이 필요합니다.', en:'Pi login required.', id:'Login Pi diperlukan.', zh:'需要 Pi 登录。', ja:'Piログインが必要です。', es:'Se requiere inicio de sesión de Pi.', vi:'Cần đăng nhập Pi.', hi:'Pi लॉगिन आवश्यक।', pt:'Login Pi necessário.', tl:'Kailangan ng Pi login.', fr:'Connexion Pi requise.' },
+  track_deposit_required: { ko:'예치 가치를 입력해주세요', en:'Please enter a deposit value', id:'Silakan masukkan nilai deposit', zh:'请输入存款价值', ja:'預入価値を入力してください', es:'Ingrese un valor de depósito', vi:'Vui lòng nhập giá trị gửi', hi:'कृपया जमा मूल्य दर्ज करें', pt:'Insira um valor de depósito', tl:'Maglagay ng halaga ng deposit', fr:'Veuillez entrer une valeur de dépôt' },
 };
 
 function tr(s) {
@@ -202,6 +232,9 @@ function ensureStyles() {
   const style = document.createElement('style');
   style.id = 'mm-styles';
   style.textContent = `
+.mm-container .mm-section-toggle { display:flex; gap:4px; background:var(--bg2); border-radius:var(--radius-sm); padding:4px; margin-bottom:14px; }
+.mm-container .mm-sec-btn { flex:1; border:none; background:transparent; color:var(--text2); font-size:12px; font-weight:600; padding:8px 4px; border-radius:6px; cursor:pointer; }
+.mm-container .mm-sec-btn.active { background:var(--accent); color:#fff; }
 .mm-container .step-dots { display:flex; gap:6px; margin-bottom:6px; }
 .mm-container .step-dot { flex:1; height:4px; border-radius:2px; background:var(--bg3); }
 .mm-container .step-dot.active { background:var(--accent); }
@@ -664,6 +697,207 @@ function runAMMBacktest(pool, trades, p) {
     feeIncome: totalFees, il,
     lpShare: lpShare * 100,
     exitReason, snapshots,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+//  MY LP TRACKING — real (not backtested) position tracking
+// ═══════════════════════════════════════════════════════
+
+let mmSection   = 'backtest';
+let lpPositions = [];
+
+async function fetchPoolState(network, poolId) {
+  const base = NETWORKS[network].horizon;
+  const r = await fetch(`${base}/liquidity_pools/${poolId}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchAccountLpShares(network, wallet, poolId) {
+  const base = NETWORKS[network].horizon;
+  const r = await fetch(`${base}/accounts/${wallet}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const acc = await r.json();
+  const bal = (acc.balances || []).find(b => b.asset_type === 'liquidity_pool_shares' && b.liquidity_pool_id === poolId);
+  return bal ? parseFloat(bal.balance) : 0;
+}
+
+function poolPriceAndValue(pool) {
+  const r0 = pool.reserves[0], r1 = pool.reserves[1];
+  const isNative0 = r0.asset === 'native';
+  const nativeAmt = parseFloat(isNative0 ? r0.amount : r1.amount);
+  const usdcAmt   = parseFloat(isNative0 ? r1.amount : r0.amount);
+  const price     = nativeAmt > 0 ? usdcAmt / nativeAmt : 0;
+  const totalShares = parseFloat(pool.total_shares || '0');
+  const poolVal   = usdcAmt + nativeAmt * price;
+  return { price, totalShares, poolVal };
+}
+
+// walletAddress가 있으면 실제 보유 지분으로 정확히 계산, 없으면 등록 시점 가격 대비 IL 공식으로 근사 계산(수수료 미포함)
+async function computePositionPnl(pos) {
+  const pool = await fetchPoolState(pos.network, pos.poolId);
+  const { price, totalShares, poolVal } = poolPriceAndValue(pool);
+
+  if (pos.walletAddress) {
+    const myShares = await fetchAccountLpShares(pos.network, pos.walletAddress, pos.poolId);
+    const ratio = totalShares > 0 ? myShares / totalShares : 0;
+    const currentValue = ratio * poolVal;
+    return {
+      currentValue, pnl: currentValue - pos.entryUsdc,
+      roi: pos.entryUsdc > 0 ? (currentValue - pos.entryUsdc) / pos.entryUsdc * 100 : 0,
+      exact: true, hasShares: myShares > 0,
+    };
+  }
+
+  const k = pos.entryPrice > 0 ? price / pos.entryPrice : 1;
+  const currentValue = pos.entryUsdc * (2 * Math.sqrt(k) / (1 + k));
+  return {
+    currentValue, pnl: currentValue - pos.entryUsdc,
+    roi: pos.entryUsdc > 0 ? (currentValue - pos.entryUsdc) / pos.entryUsdc * 100 : 0,
+    exact: false,
+  };
+}
+
+function setSection(sec) {
+  mmSection = sec;
+  rootContainer.querySelectorAll('.mm-sec-btn').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+  rootContainer.querySelector('#mm-backtest-wrap').classList.toggle('hidden', sec !== 'backtest');
+  rootContainer.querySelector('#mm-tracking-wrap').classList.toggle('hidden', sec !== 'tracking');
+  if (sec === 'tracking') renderTrackingSection();
+}
+
+async function renderTrackingSection() {
+  const wrap = rootContainer.querySelector('#mm-tracking-wrap');
+  wrap.innerHTML = `<div class="status-text"><span class="spinner"></span> ${tr(S.run_start)}</div>`;
+
+  const username = getUsername();
+  if (!username) {
+    wrap.innerHTML = `<div class="mm-alert error">${tr(S.track_no_login)}</div>`;
+    return;
+  }
+
+  try {
+    lpPositions = await fetchLpPositionsServer(username);
+  } catch {
+    wrap.innerHTML = `<div class="mm-alert error">${tr(S.track_load_fail)}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="page-title" style="margin-bottom:10px;">${tr(S.track_title)} <span class="param-hint">(${lpPositions.length}/${LP_POSITION_MAX})</span></div>
+    <div id="mm-track-list">
+      ${lpPositions.length === 0
+        ? `<div class="mm-alert">${tr(S.track_empty)}</div><button class="btn-outline" style="width:100%;margin-top:10px;" onclick="window.mm_setSection('backtest')">${tr(S.track_goto_backtest)}</button>`
+        : lpPositions.map(p => trackCardHtml(p)).join('')}
+    </div>
+  `;
+
+  lpPositions.forEach(p => loadPositionPnl(p.id));
+}
+
+function trackCardHtml(p) {
+  return `
+    <div class="card" id="mm-track-card-${p.id}">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${p.alias || p.poolLabel}</span>
+        <button class="btn-outline" style="width:auto;padding:2px 8px;font-size:11px;" onclick="window.mm_deletePosition('${p.id}')">✕</button>
+      </div>
+      <div class="stat-row"><span class="stat-label">${p.poolLabel} · ${NETWORKS[p.network].name}</span></div>
+      <div class="stat-row"><span class="stat-label">${tr(S.track_date)}</span><span class="stat-value">${p.entryDate}</span></div>
+      <div class="stat-row"><span class="stat-label">${tr(S.track_entry_value)}</span><span class="stat-value">${fmt(p.entryUsdc)} USDC</span></div>
+      <div id="mm-track-pnl-${p.id}"><div class="status-text"><span class="spinner"></span></div></div>
+    </div>`;
+}
+
+async function loadPositionPnl(id) {
+  const pos = lpPositions.find(p => p.id === id);
+  const el  = rootContainer?.querySelector(`#mm-track-pnl-${id}`);
+  if (!pos || !el) return;
+  try {
+    const r = await computePositionPnl(pos);
+    const tag       = r.exact ? tr(S.track_exact) : tr(S.track_approx);
+    const shareWarn = r.exact && !r.hasShares ? `<div class="mm-alert error">${tr(S.track_no_shares)}</div>` : '';
+    el.innerHTML = `
+      ${shareWarn}
+      <div class="stat-row"><span class="stat-label">${tr(S.track_current_value)}</span><span class="stat-value">${fmt(r.currentValue)} USDC</span></div>
+      <div class="stat-row"><span class="stat-label">${tr(S.res_lp_pnl)}</span><div>${fmtPct(r.roi)} &nbsp; ${fmtUsdc(r.pnl)}</div></div>
+      <div class="param-hint">${tag}</div>
+    `;
+  } catch {
+    el.innerHTML = `<div class="mm-alert error">${tr(S.track_fail)}</div>`;
+  }
+}
+
+async function deletePosition(id) {
+  const username = getUsername();
+  if (!username) return;
+  try {
+    const updated = lpPositions.filter(p => p.id !== id);
+    await saveLpPositionsServer(username, updated);
+    lpPositions = updated;
+    renderTrackingSection();
+  } catch { showToast(tr(S.track_fail)); }
+}
+
+function openAddPositionDialog(prefill) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:340px;">
+      <div class="modal-header"><h2 style="font-size:16px;">${tr(S.track_add_title)}</h2><button class="modal-close" id="tp-x">✕</button></div>
+      <div class="modal-body">
+        <div class="mm-alert info">📊 ${prefill.poolLabel} · ${NETWORKS[prefill.network].name}</div>
+        <input class="form-input" id="tp-alias" placeholder="${tr(S.track_alias_ph)}" style="margin-bottom:8px;">
+        <input class="form-input" id="tp-deposit" type="number" placeholder="${tr(S.track_deposit_ph)}" value="${prefill.depositUsdc || ''}" style="margin-bottom:8px;">
+        <input class="form-input" id="tp-wallet" placeholder="${tr(S.track_wallet_ph)}" style="margin-bottom:4px;">
+        <p class="param-hint" style="margin:0 0 8px;">${tr(S.track_wallet_hint)}</p>
+        <p id="tp-err" style="color:var(--red);font-size:11px;display:none;"></p>
+        <div class="mm-nav-row">
+          <button class="btn-outline" id="tp-cancel">${tr(S.btn_prev)}</button>
+          <button class="btn-primary" id="tp-save">${tr(S.track_save)}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#tp-x').onclick = close;
+  overlay.querySelector('#tp-cancel').onclick = close;
+
+  overlay.querySelector('#tp-save').onclick = async () => {
+    const alias   = overlay.querySelector('#tp-alias').value.trim();
+    const deposit = parseFloat(overlay.querySelector('#tp-deposit').value);
+    const wallet  = overlay.querySelector('#tp-wallet').value.trim();
+    const errEl   = overlay.querySelector('#tp-err');
+    const saveBtn = overlay.querySelector('#tp-save');
+
+    if (!deposit || deposit <= 0) { errEl.textContent = tr(S.track_deposit_required); errEl.style.display = ''; return; }
+    const username = getUsername();
+    if (!username) { errEl.textContent = tr(S.track_no_login); errEl.style.display = ''; return; }
+
+    saveBtn.disabled = true;
+    try {
+      const pool = await fetchPoolState(prefill.network, prefill.poolId);
+      const { price } = poolPriceAndValue(pool);
+      const newPos = {
+        id: `lp${Date.now()}`, alias, network: prefill.network,
+        poolId: prefill.poolId, poolLabel: prefill.poolLabel,
+        walletAddress: wallet, entryDate: new Date().toISOString().slice(0, 10),
+        entryPrice: price, entryUsdc: deposit,
+      };
+      const current = await fetchLpPositionsServer(username);
+      if (current.length >= LP_POSITION_MAX) { errEl.textContent = tr(S.track_fail); errEl.style.display = ''; saveBtn.disabled = false; return; }
+      const updated = [...current, newPos];
+      await saveLpPositionsServer(username, updated);
+      lpPositions = updated;
+      close();
+      showToast(tr(S.track_registered_toast));
+      setSection('tracking');
+    } catch {
+      errEl.textContent = tr(S.track_fail);
+      errEl.style.display = '';
+      saveBtn.disabled = false;
+    }
   };
 }
 
@@ -1266,7 +1500,17 @@ function ammResultHtml(r) {
       <canvas id="mm-result-chart"></canvas>
     </div>
     ${analysisHtml(r)}
+    <button class="btn-outline" style="width:100%;margin-top:10px;" onclick="window.mm_registerPosition()">${tr(S.track_register_btn)}</button>
   `;
+}
+
+function registerPositionFromResult() {
+  openAddPositionDialog({
+    network: state.network,
+    poolId: state.pool.id,
+    poolLabel: poolLabel(state.pool),
+    depositUsdc: state.params.depositUsdc,
+  });
 }
 
 function analysisHtml(r) {
@@ -1670,15 +1914,26 @@ export function renderMM(container) {
   scanSelectedIds = new Set();
   scanSelectionSet = false;
   piTotalFetched = 0;
+  mmSection = 'backtest';
 
   container.innerHTML = `
     <div class="mm-container">
-      <div id="mm-step-indicator"></div>
-      <div id="mm-content"></div>
-      <div id="mm-nav-buttons"></div>
+      <div class="mm-section-toggle">
+        <button class="mm-sec-btn active" data-sec="backtest" onclick="window.mm_setSection('backtest')">${tr(S.sec_backtest)}</button>
+        <button class="mm-sec-btn" data-sec="tracking" onclick="window.mm_setSection('tracking')">${tr(S.sec_tracking)}</button>
+      </div>
+      <div id="mm-backtest-wrap">
+        <div id="mm-step-indicator"></div>
+        <div id="mm-content"></div>
+        <div id="mm-nav-buttons"></div>
+      </div>
+      <div id="mm-tracking-wrap" class="hidden"></div>
     </div>
   `;
 
+  window.mm_setSection         = setSection;
+  window.mm_deletePosition     = (id) => { if (confirm(tr(S.track_delete_confirm))) deletePosition(id); };
+  window.mm_registerPosition   = registerPositionFromResult;
   window.mm_selectNetwork      = selectNetwork;
   window.mm_selectStrategy     = selectStrategy;
   window.mm_nextStep           = nextStep;

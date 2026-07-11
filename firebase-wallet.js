@@ -36,6 +36,25 @@ export async function saveWalletsServer(username, wallets) {
   });
 }
 
+// MM 탭 — AMM 실계좌 LP 포지션 추적 (서버가 원본, pidex_lp_positions 컬렉션)
+export const LP_POSITION_MAX = 20;
+
+export async function fetchLpPositionsServer(username) {
+  const db = getDb();
+  if (!db || !username) throw new Error('no_login');
+  const doc = await db.collection('pidex_lp_positions').doc(username).get();
+  return doc.exists ? (doc.data().positions || []) : [];
+}
+
+export async function saveLpPositionsServer(username, positions) {
+  const db = getDb();
+  if (!db || !username) throw new Error('no_login');
+  await db.collection('pidex_lp_positions').doc(username).set({
+    positions,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
 // pidex_app → hack_tracker 관심주소 등록 (서버가 원본 — pidex_watch_list 직접 갱신)
 export const HACK_WATCH_MAX  = 10;
 export const HACK_WALLET_MAX = 30;
