@@ -163,8 +163,8 @@ async function doLogin() {
     renderLangSwitch();
     renderHeaderButtons();
     setWalletTabVisible(true);
-    switchPage('dashboard');
     showNoticeIfNeeded();
+    switchPage('dashboard');
   } catch (e) {
     btn.disabled = false;
     btn.textContent = t('login_btn');
