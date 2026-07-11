@@ -53,25 +53,6 @@ export async function registerInHackWatch(username, address, alias) {
   return 'added';
 }
 
-// 거래 지갑 별칭 (상대방 주소 라벨) — pidex_trade_wallets 컬렉션, testnet/mainnet 필드로 두 앱이 공유
-export const TRADE_WALLET_MAX = 100;
-
-export async function fetchTradeWalletsServer(username) {
-  const db = getDb();
-  if (!db || !username) throw new Error('no_login');
-  const doc = await db.collection('pidex_trade_wallets').doc(username).get();
-  return doc.exists ? (doc.data().testnet || []) : [];
-}
-
-export async function saveTradeWalletsServer(username, wallets) {
-  const db = getDb();
-  if (!db || !username) throw new Error('no_login');
-  await db.collection('pidex_trade_wallets').doc(username).set({
-    testnet: wallets,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }, { merge: true });
-}
-
 // pidex_app → hack_tracker 내 지갑 등록 (서버가 원본 — hack_pending_wallets 직접 갱신)
 export async function registerInHackWallet(username, address, alias) {
   const db = getDb();

@@ -7,7 +7,6 @@ import { currentUser } from './pi-sdk.js';
 import {
   fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
   registerInHackWatch, registerInHackWallet,
-  fetchTradeWalletsServer, saveTradeWalletsServer, TRADE_WALLET_MAX,
 } from './firebase-wallet.js';
 
 const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목록 자체는 서버가 원본
@@ -15,21 +14,7 @@ const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목�
 function getActiveId()   { return localStorage.getItem(ACTIVE_KEY); }
 function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
 function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
-function genTradeId()    { return `t${Date.now()}${Math.random().toString(36).slice(2, 5)}`; }
 function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
-
-// ─── 거래 지갑 별칭 (상대방 주소 라벨) ──────────────────────────
-let tradeAliasMap = new Map();
-function aliasFor(addr) { return addr ? tradeAliasMap.get(addr) : undefined; }
-async function loadTradeAliasMap() {
-  const username = getUsername();
-  if (!username) { tradeAliasMap = new Map(); return; }
-  try {
-    const list = await fetchTradeWalletsServer(username);
-    tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
-  } catch { tradeAliasMap = new Map(); }
-}
-loadTradeAliasMap();
 
 // ─── 주소 컨텍스트 메뉴 ─────────────────────────────────────
 
@@ -456,167 +441,6 @@ function showEditAliasDialog(wallet, allWallets, onSaved) {
   };
 }
 
-// ─── 거래 지갑 별칭 모달 ─────────────────────────────────────────────────────
-
-async function openTradeWalletModal() {
-  const username = getUsername();
-  if (!username) { showToast(t('wallet_cloud_fail')); return; }
-
-  const { overlay, close } = openModal(`<div id="tw-body" style="padding:16px;text-align:center;color:var(--text-dim);">⏳ ${t('wallet_loading')}</div>`);
-
-  let list;
-  try {
-    list = await fetchTradeWalletsServer(username);
-  } catch {
-    overlay.querySelector('#tw-body').innerHTML = `<p style="color:var(--red);font-size:13px;">${t('wallet_load_fail')}</p>`;
-    return;
-  }
-  tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
-
-  function renderBody() {
-    overlay.querySelector('#tw-body').innerHTML = `
-      <div class="modal-header">
-        <h2 style="font-size:16px;">${t('trade_title')} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(${list.length}/${TRADE_WALLET_MAX})</span></h2>
-        <button class="modal-close" id="tw-x">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:12px;color:var(--text-dim);margin:0 0 12px;">${t('trade_desc')}</p>
-        ${list.length === 0
-          ? `<p style="color:var(--text-dim);font-size:13px;">${t('trade_empty')}</p>`
-          : list.map(w => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-                <div style="font-size:13px;">
-                  <div style="font-weight:600;">${w.alias}</div>
-                  <div style="font-size:11px;color:var(--text-dim);font-family:monospace;">${w.address.slice(0,4)}···${w.address.slice(-3)}</div>
-                </div>
-                <div style="display:flex;gap:4px;">
-                  <button class="btn-outline btn-sm" data-tw-edit="${w.id}" style="width:auto;padding:0 8px;">✏️</button>
-                  <button class="btn-outline btn-sm" data-tw-del="${w.id}" style="width:auto;padding:0 8px;">✕</button>
-                </div>
-              </div>`).join('')}
-        ${list.length < TRADE_WALLET_MAX ? `<button class="btn-outline btn-sm" id="tw-add" style="width:100%;margin-top:12px;">+ ${t('trade_add_title')}</button>` : ''}
-      </div>`;
-
-    overlay.querySelector('#tw-x').onclick = close;
-
-    overlay.querySelectorAll('[data-tw-edit]').forEach(btn => {
-      btn.onclick = () => {
-        const w = list.find(x => x.id === btn.dataset.twEdit);
-        if (w) showTradeAliasDialog(w);
-      };
-    });
-    overlay.querySelectorAll('[data-tw-del]').forEach(btn => {
-      btn.onclick = async () => {
-        btn.disabled = true;
-        try {
-          list = list.filter(w => w.id !== btn.dataset.twDel);
-          await saveTradeWalletsServer(username, list);
-          tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
-          renderBody();
-        } catch { showToast(t('wallet_cloud_err')); btn.disabled = false; }
-      };
-    });
-    overlay.querySelector('#tw-add')?.addEventListener('click', showTradeAddInline);
-  }
-
-  function showTradeAliasDialog(wallet) {
-    const box = document.createElement('div');
-    box.className = 'modal-overlay';
-    box.innerHTML = `
-      <div class="modal-box" style="max-width:300px;">
-        <div class="modal-header">
-          <h2 style="font-size:16px;">${t('wallet_edit_alias')}</h2>
-          <button class="modal-close" id="twa-x">✕</button>
-        </div>
-        <div class="modal-body">
-          <input type="text" id="twa-alias" class="form-input" value="${wallet.alias}" style="font-size:12px;" />
-          <p id="twa-err" style="color:var(--red);font-size:11px;margin-top:6px;display:none;"></p>
-          <div style="display:flex;gap:8px;margin-top:12px;">
-            <button class="btn-outline btn-sm" id="twa-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
-            <button class="btn-primary btn-sm" id="twa-save" style="flex:1;">${t('wallet_change_save')}</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(box);
-    const closeBox = () => box.remove();
-    box.querySelector('#twa-x').onclick = closeBox;
-    box.querySelector('#twa-cancel').onclick = closeBox;
-    box.querySelector('#twa-alias').select();
-    box.querySelector('#twa-save').onclick = async () => {
-      const alias   = box.querySelector('#twa-alias').value.trim();
-      const errEl   = box.querySelector('#twa-err');
-      const saveBtn = box.querySelector('#twa-save');
-      if (!alias) return;
-      saveBtn.disabled = true;
-      try {
-        list = list.map(w => w.id === wallet.id ? { ...w, alias } : w);
-        await saveTradeWalletsServer(username, list);
-        tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
-        closeBox();
-        renderBody();
-      } catch {
-        errEl.textContent = t('wallet_cloud_err');
-        errEl.style.display = '';
-        saveBtn.disabled = false;
-      }
-    };
-  }
-
-  function showTradeAddInline() {
-    const box = document.createElement('div');
-    box.className = 'modal-overlay';
-    box.innerHTML = `
-      <div class="modal-box" style="max-width:320px;">
-        <div class="modal-header">
-          <h2 style="font-size:16px;">${t('trade_add_title')}</h2>
-          <button class="modal-close" id="twn-x">✕</button>
-        </div>
-        <div class="modal-body">
-          <input type="text" id="twn-addr" class="form-input" placeholder="${t('wallet_change_ph')}" style="font-size:12px;margin-bottom:8px;" />
-          <input type="text" id="twn-alias" class="form-input" placeholder="${t('wallet_alias_ph')}" style="font-size:12px;" />
-          <p id="twn-err" style="color:var(--red);font-size:11px;margin-top:6px;display:none;"></p>
-          <div style="display:flex;gap:8px;margin-top:12px;">
-            <button class="btn-outline btn-sm" id="twn-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
-            <button class="btn-primary btn-sm" id="twn-save" style="flex:1;">${t('wallet_change_save')}</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(box);
-    const closeBox = () => box.remove();
-    box.querySelector('#twn-x').onclick = closeBox;
-    box.querySelector('#twn-cancel').onclick = closeBox;
-    box.querySelector('#twn-save').onclick = async () => {
-      const addr    = box.querySelector('#twn-addr').value.trim();
-      const alias   = box.querySelector('#twn-alias').value.trim() || `${addr.slice(0,6)}···${addr.slice(-4)}`;
-      const errEl   = box.querySelector('#twn-err');
-      const saveBtn = box.querySelector('#twn-save');
-      if (!addr.startsWith('G') || addr.length !== 56) {
-        errEl.textContent = t('info_key_invalid'); errEl.style.display = ''; return;
-      }
-      if (list.some(w => w.address === addr)) {
-        errEl.textContent = t('wallet_duplicate_addr'); errEl.style.display = ''; return;
-      }
-      if (list.length >= TRADE_WALLET_MAX) {
-        errEl.textContent = t('trade_add_err_full').replace('{n}', TRADE_WALLET_MAX); errEl.style.display = ''; return;
-      }
-      saveBtn.disabled = true;
-      try {
-        list = [...list, { id: genTradeId(), address: addr, alias }];
-        await saveTradeWalletsServer(username, list);
-        tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
-        closeBox();
-        renderBody();
-      } catch {
-        errEl.textContent = t('wallet_cloud_err');
-        errEl.style.display = '';
-        saveBtn.disabled = false;
-      }
-    };
-  }
-
-  renderBody();
-}
-
 // ─── Delete confirm dialog ──────────────────────────────────────────────────
 
 function showDeleteDialog(wallet, allWallets, onConfirmed) {
@@ -663,7 +487,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
 function txRowHtml(op, walletAlias) {
   const isIn   = op.isIncoming;
   const other  = isIn ? op.from : op.to;
-  const short  = other ? (aliasFor(other) || `${other.slice(0, 4)}···${other.slice(-3)}`) : '?';
+  const short  = other ? `${other.slice(0, 4)}···${other.slice(-3)}` : '?';
   const asset  = op.asset_code ?? (op.asset_type === 'native' ? 'π' : (op.asset_type ?? '?'));
   const amount = parseFloat(op.amount ?? 0).toFixed(2);
   const date   = op.created_at ? new Date(op.created_at).toLocaleDateString() : '';
@@ -926,7 +750,6 @@ export async function renderWallet(container) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
         <h2 class="page-title" style="margin:0;">${t('wallet_title')} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">(${wallets.length}/${PIDEX_WALLET_MAX})</span></h2>
         <div style="display:flex;gap:4px;">
-          <button class="btn-outline btn-sm" id="btn-wallet-trade" style="width:auto;padding:0 12px;" title="${t('trade_btn')}">🏷️</button>
           <button class="btn-outline btn-sm" id="btn-wallet-backup" style="width:auto;padding:0 12px;">☁️</button>
           <button class="btn-outline btn-sm" id="btn-wallet-refresh" style="width:auto;padding:0 12px;">↻ ${t('wallet_refresh')}</button>
         </div>
@@ -946,8 +769,6 @@ export async function renderWallet(container) {
       rerenderPage('wallet');
     });
   });
-
-  container.querySelector('#btn-wallet-trade').addEventListener('click', () => openTradeWalletModal());
 
   container.querySelector('#btn-add-wallet')?.addEventListener('click', () => {
     showAddDialog(wallets, () => rerenderPage('wallet'));
