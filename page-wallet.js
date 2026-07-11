@@ -354,8 +354,8 @@ function showAddDialog(currentWallets, onSaved) {
   overlay.querySelector('#md-cancel').onclick = close;
 
   overlay.querySelector('#md-save').onclick = async () => {
-    const alias   = overlay.querySelector('#md-alias').value.trim() || `Wallet ${currentWallets.length + 1}`;
     const addr    = overlay.querySelector('#md-addr').value.trim();
+    const alias   = overlay.querySelector('#md-alias').value.trim() || aliasFor(addr) || `Wallet ${currentWallets.length + 1}`;
     const errEl   = overlay.querySelector('#md-err');
     const saveBtn = overlay.querySelector('#md-save');
 
