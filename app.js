@@ -7,18 +7,18 @@ import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
-  version: '2026-07-11',
-  ko: '📢 업데이트 안내 (2026-07-11)\n\n① 지갑 클라우드 백업 · 복원 기능 추가 (최대 30개)',
-  en: "📢 Update Notice (2026-07-11)\n\n① Added cloud backup/restore for wallets (up to 30)",
-  id: "📢 Pemberitahuan Pembaruan (2026-07-11)\n\n① Ditambahkan fitur backup/pulihkan cloud untuk dompet (hingga 30)",
-  zh: '📢 更新通知 (2026-07-11)\n\n① 新增钱包云备份/恢复功能（最多30个）',
-  ja: '📢 アップデートのお知らせ (2026-07-11)\n\n① ウォレットのクラウドバックアップ・復元機能を追加（最大30個）',
-  es: "📢 Aviso de actualización (2026-07-11)\n\n① Se añadió backup/restauración en la nube para carteras (hasta 30)",
-  vi: "📢 Thông báo cập nhật (2026-07-11)\n\n① Đã thêm sao lưu/khôi phục đám mây cho ví (tối đa 30)",
-  hi: "📢 अपडेट सूचना (2026-07-11)\n\n① वॉलेट के लिए क्लाउड बैकअप/पुनर्स्थापन जोड़ा गया (अधिकतम 30)",
-  pt: "📢 Aviso de atualização (2026-07-11)\n\n① Adicionado backup/restauração em nuvem para carteiras (até 30)",
-  tl: "📢 Abiso sa Update (2026-07-11)\n\n① Idinagdag ang cloud backup/restore para sa wallet (hanggang 30)",
-  fr: "📢 Avis de mise à jour (2026-07-11)\n\n① Ajout de la sauvegarde/restauration cloud pour les portefeuilles (jusqu'à 30)",
+  version: '2026-07-12',
+  ko: '📢 업데이트 안내 (2026-07-12)\n\n① 지갑 별칭이 퀴즈파이 앱과 통합되어, 어디서 등록한 별칭이든 거래내역에 자동으로 표시됩니다',
+  en: "📢 Update Notice (2026-07-12)\n\n① Wallet aliases are now unified with the PiDEX Quiz app — any alias you've registered will automatically show in transaction history",
+  id: "📢 Pemberitahuan Pembaruan (2026-07-12)\n\n① Alias dompet kini terpadu dengan aplikasi PiDEX Quiz — alias apa pun yang Anda daftarkan akan otomatis muncul di riwayat transaksi",
+  zh: '📢 更新通知 (2026-07-12)\n\n① 钱包别名现已与PiDEX Quiz应用统一，无论在哪里注册的别名都会自动显示在交易记录中',
+  ja: '📢 アップデートのお知らせ (2026-07-12)\n\n① ウォレットのエイリアスがPiDEX Quizアプリと統合され、どこで登録したエイリアスでも取引履歴に自動で表示されます',
+  es: "📢 Aviso de actualización (2026-07-12)\n\n① Los alias de cartera ahora están unificados con la app PiDEX Quiz — cualquier alias que registre aparecerá automáticamente en el historial de transacciones",
+  vi: "📢 Thông báo cập nhật (2026-07-12)\n\n① Biệt danh ví giờ đã hợp nhất với ứng dụng PiDEX Quiz — bất kỳ biệt danh nào bạn đăng ký sẽ tự động hiển thị trong lịch sử giao dịch",
+  hi: "📢 अपडेट सूचना (2026-07-12)\n\n① वॉलेट उपनाम अब PiDEX Quiz ऐप के साथ एकीकृत हो गए हैं — आपने जहां भी उपनाम पंजीकृत किया हो, वह लेनदेन इतिहास में अपने आप दिखेगा",
+  pt: "📢 Aviso de atualização (2026-07-12)\n\n① Os apelidos de carteira agora estão unificados com o app PiDEX Quiz — qualquer apelido que você registrar aparecerá automaticamente no histórico de transações",
+  tl: "📢 Abiso sa Update (2026-07-12)\n\n① Pinagsama na ang alias ng wallet sa PiDEX Quiz app — anumang alias na na-register mo ay awtomatikong lalabas sa transaction history",
+  fr: "📢 Avis de mise à jour (2026-07-12)\n\n① Les alias de portefeuille sont désormais unifiés avec l'application PiDEX Quiz — tout alias que vous enregistrez apparaît automatiquement dans l'historique des transactions",
 };
 import { isSubscribed } from './util-storage.js';
 import { getDb } from './firebase-wallet.js';
