@@ -7,18 +7,18 @@ import { renderWallet }       from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
-  version: '2026-07-10',
-  ko: '📢 업데이트 안내\n\n① 지갑 목록이 서버에 저장되어 기기를 바꿔도 유지됩니다 (최대 30개)\n② 지갑마다 수정 · 퀴즈파이 메인넷지갑 전송 · 삭제 버튼이 추가되었습니다\n③ 새로고침 버튼으로 서버 최신 목록을 바로 불러올 수 있습니다',
-  en: "📢 Update Notice\n\n① Your wallet list is now stored on the server, so it stays even if you switch devices (up to 30)\n② Added edit, send-to-PiDEX-Quiz-mainnet-wallet, and delete buttons for each wallet\n③ Use the refresh button to fetch the latest list from the server anytime",
-  id: "📢 Pemberitahuan Pembaruan\n\n① Daftar dompet kini disimpan di server, jadi tetap ada meski ganti perangkat (maks 30)\n② Ditambahkan tombol edit, kirim ke dompet mainnet PiDEX Quiz, dan hapus untuk setiap dompet\n③ Gunakan tombol refresh untuk mengambil daftar terbaru dari server kapan saja",
-  zh: '📢 更新通知\n\n① 钱包列表现已存储在服务器上，更换设备后依然保留（最多30个）\n② 每个钱包新增了编辑、发送到PiDEX Quiz主网钱包、删除按钮\n③ 使用刷新按钮可随时从服务器获取最新列表',
-  ja: '📢 アップデートのお知らせ\n\n① ウォレットリストがサーバーに保存されるようになり、端末を変更しても保持されます（最大30個）\n② 各ウォレットに編集・PiDEX Quizメインネットウォレットへ送信・削除ボタンが追加されました\n③ 更新ボタンでサーバーの最新リストをいつでも取得できます',
-  es: "📢 Aviso de actualización\n\n① Tu lista de carteras ahora se guarda en el servidor, así que se mantiene aunque cambies de dispositivo (hasta 30)\n② Se añadieron botones de editar, enviar a la cartera mainnet de PiDEX Quiz y eliminar en cada cartera\n③ Usa el botón de actualizar para obtener la lista más reciente del servidor en cualquier momento",
-  vi: "📢 Thông báo cập nhật\n\n① Danh sách ví giờ được lưu trên server, nên vẫn còn dù bạn đổi thiết bị (tối đa 30)\n② Đã thêm nút sửa, gửi đến ví mainnet PiDEX Quiz, và xóa cho mỗi ví\n③ Dùng nút làm mới để lấy danh sách mới nhất từ server bất cứ lúc nào",
-  hi: "📢 अपडेट सूचना\n\n① वॉलेट सूची अब सर्वर पर सहेजी जाती है, इसलिए डिवाइस बदलने पर भी बनी रहती है (अधिकतम 30)\n② प्रत्येक वॉलेट के लिए संपादित करें, PiDEX Quiz मेननेट वॉलेट में भेजें, और हटाएं बटन जोड़े गए\n③ रीफ्रेश बटन से कभी भी सर्वर से नवीनतम सूची प्राप्त करें",
-  pt: "📢 Aviso de atualização\n\n① Sua lista de carteiras agora é salva no servidor, então permanece mesmo trocando de dispositivo (até 30)\n② Adicionados botões de editar, enviar para a carteira mainnet do PiDEX Quiz, e excluir em cada carteira\n③ Use o botão de atualizar para buscar a lista mais recente do servidor a qualquer momento",
-  tl: "📢 Abiso sa Update\n\n① Ang listahan ng wallet ay naka-save na sa server, kaya nananatili kahit magpalit ka ng device (hanggang 30)\n② Idinagdag ang edit, ipadala sa PiDEX Quiz mainnet wallet, at delete na button sa bawat wallet\n③ Gamitin ang refresh button para makuha ang pinakabagong listahan mula sa server anumang oras",
-  fr: "📢 Avis de mise à jour\n\n① Votre liste de portefeuilles est désormais enregistrée sur le serveur, elle persiste donc même si vous changez d'appareil (jusqu'à 30)\n② Ajout de boutons modifier, envoyer vers le portefeuille mainnet PiDEX Quiz et supprimer pour chaque portefeuille\n③ Utilisez le bouton d'actualisation pour récupérer la liste la plus récente du serveur à tout moment",
+  version: '2026-07-11',
+  ko: '📢 업데이트 안내 (2026-07-11)\n\n① 지갑 클라우드 백업 · 복원 기능 추가 (최대 30개)',
+  en: "📢 Update Notice (2026-07-11)\n\n① Added cloud backup/restore for wallets (up to 30)",
+  id: "📢 Pemberitahuan Pembaruan (2026-07-11)\n\n① Ditambahkan fitur backup/pulihkan cloud untuk dompet (hingga 30)",
+  zh: '📢 更新通知 (2026-07-11)\n\n① 新增钱包云备份/恢复功能（最多30个）',
+  ja: '📢 アップデートのお知らせ (2026-07-11)\n\n① ウォレットのクラウドバックアップ・復元機能を追加（最大30個）',
+  es: "📢 Aviso de actualización (2026-07-11)\n\n① Se añadió backup/restauración en la nube para carteras (hasta 30)",
+  vi: "📢 Thông báo cập nhật (2026-07-11)\n\n① Đã thêm sao lưu/khôi phục đám mây cho ví (tối đa 30)",
+  hi: "📢 अपडेट सूचना (2026-07-11)\n\n① वॉलेट के लिए क्लाउड बैकअप/पुनर्स्थापन जोड़ा गया (अधिकतम 30)",
+  pt: "📢 Aviso de atualização (2026-07-11)\n\n① Adicionado backup/restauração em nuvem para carteiras (até 30)",
+  tl: "📢 Abiso sa Update (2026-07-11)\n\n① Idinagdag ang cloud backup/restore para sa wallet (hanggang 30)",
+  fr: "📢 Avis de mise à jour (2026-07-11)\n\n① Ajout de la sauvegarde/restauration cloud pour les portefeuilles (jusqu'à 30)",
 };
 import { isSubscribed } from './util-storage.js';
 import { getDb } from './firebase-wallet.js';
