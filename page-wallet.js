@@ -6,7 +6,7 @@ import { t } from './i18n.js';
 import { currentUser } from './pi-sdk.js';
 import {
   fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
-  registerInHackWatch, registerInHackWallet, fetchTradeAliasesReadOnly,
+  registerInHackWatch, registerInHackWallet, fetchAddressAliases,
 } from './firebase-wallet.js';
 
 const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목록 자체는 서버가 원본
@@ -16,15 +16,13 @@ function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
 function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
 function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
 
-// ─── 거래 지갑 별칭 (읽기 전용 — 등록/관리는 퀴즈파이 앱에서) ──────────
-let tradeAliasMap = new Map();
-function aliasFor(addr) { return addr ? tradeAliasMap.get(addr) : undefined; }
-async function loadTradeAliasMap() {
-  const username = getUsername();
-  const list = await fetchTradeAliasesReadOnly(username);
-  tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
+// ─── 공용 주소 별칭 사전 (읽기 전용 — 등록/관리는 퀴즈파이 앱에서 통합) ──────────
+let addressAliases = {};
+function aliasFor(addr) { return addr ? addressAliases[addr] : undefined; }
+async function loadAddressAliases() {
+  addressAliases = await fetchAddressAliases(getUsername());
 }
-loadTradeAliasMap();
+loadAddressAliases();
 
 // ─── 주소 컨텍스트 메뉴 ─────────────────────────────────────
 
@@ -64,7 +62,7 @@ function initWalletAddrMenu() {
     if (!addr) return;
     const username = getUsername();
     if (!username) { showToast(t('wallet_ctx_fail')); return; }
-    const alias = `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
+    const alias = aliasFor(addr) || `W·${addr.slice(0, 6)}···${addr.slice(-4)}`;
 
     const doAdd = () => {
       registerInHackWatch(username, addr, alias)
@@ -116,7 +114,7 @@ function initWalletAddrMenu() {
 async function sendAddrToHackWallet(addr, alias) {
   const username = getUsername();
   if (!username) { showToast(t('wallet_ctx_fail')); return; }
-  const finalAlias = alias || `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
+  const finalAlias = alias || aliasFor(addr) || `★${addr.slice(0, 6)}···${addr.slice(-4)}`;
 
   const doSend = async () => {
     try {
@@ -415,7 +413,7 @@ function showEditAliasDialog(wallet, allWallets, onSaved) {
       <button class="modal-close" id="md-x">✕</button>
     </div>
     <div class="modal-body">
-      <input type="text" id="md-alias" class="form-input" value="${wallet.alias}" style="font-size:12px;" />
+      <input type="text" id="md-alias" class="form-input" value="${aliasFor(wallet.address) || wallet.alias}" style="font-size:12px;" />
       <p id="md-err" style="color:var(--red);font-size:11px;margin-top:6px;display:none;"></p>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
@@ -461,7 +459,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
     </div>
     <div class="modal-body">
       <p style="font-size:13px;margin-bottom:12px;line-height:1.5;">${t('wallet_delete_confirm')}</p>
-      <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">${wallet.alias} · ${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">${aliasFor(wallet.address) || wallet.alias} · ${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</p>
       <p id="md-err" style="color:var(--red);font-size:11px;margin-bottom:8px;display:none;"></p>
       <div style="display:flex;gap:8px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
@@ -604,17 +602,18 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
           }).join('')}
         </div>`;
 
+    const myAlias = aliasFor(wallet.address) || wallet.alias;
     const txHtml = payments.length === 0
       ? `<div class="card"><p class="empty-msg">${t('wallet_tx_none')}</p></div>`
       : `<div class="card" style="padding:12px;">
-          ${payments.map(op => txRowHtml(op, wallet.alias)).join('')}
+          ${payments.map(op => txRowHtml(op, myAlias)).join('')}
         </div>`;
 
     detailEl.innerHTML = `
       <!-- Address bar -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:10px 12px;background:rgba(255,255,255,0.05);border-radius:10px;">
         <div>
-          <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px;">${wallet.alias}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:2px;">${myAlias}</div>
           <div data-copy-addr="${wallet.address}" style="font-size:14px;color:#888;font-family:monospace;cursor:pointer;padding:5px 3px;display:inline-block;">${wallet.address.slice(0, 5)}···${wallet.address.slice(-4)}</div>
         </div>
         <div style="display:flex;gap:4px;">
@@ -683,7 +682,7 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
     });
 
     detailEl.querySelector('#btn-send-hack')?.addEventListener('click', () => {
-      sendAddrToHackWallet(wallet.address, `★${wallet.alias}`);
+      sendAddrToHackWallet(wallet.address, `★${aliasFor(wallet.address) || wallet.alias}`);
     });
 
     detailEl.querySelector('#btn-del-wallet')?.addEventListener('click', () => {
@@ -746,7 +745,7 @@ export async function renderWallet(container) {
         <button class="wallet-chip${w.id === active.id ? ' active' : ''}"
           data-wid="${w.id}" data-active-check="${w.address}"
           style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px solid ${w.id === active.id ? 'var(--accent)' : 'var(--border)'};background:${w.id === active.id ? 'var(--accent)' : 'transparent'};color:${w.id === active.id ? '#000' : 'var(--text)'};cursor:pointer;white-space:nowrap;">
-          ${w.alias}
+          ${aliasFor(w.address) || w.alias}
         </button>`).join('')}
       ${wallets.length < PIDEX_WALLET_MAX ? `<button id="btn-add-wallet"
         style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px dashed var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">

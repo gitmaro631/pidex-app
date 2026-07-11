@@ -17,14 +17,41 @@ export function getDb() {
   return _db;
 }
 
-// 거래 지갑 별칭 (읽기 전용) — 등록/관리는 퀴즈파이 앱에서만, 여기서는 거래내역 별칭 표시용으로만 읽음
-export async function fetchTradeAliasesReadOnly(username) {
+// 공용 주소 별칭 사전 (주소당 별칭 하나, 두 앱 공유) — 등록/관리는 퀴즈파이 앱에서 통합 관리,
+// 여기서는 읽기 + 이 앱에서 발생하는 등록 이벤트의 반영만 함
+export async function fetchAddressAliases(username) {
   const db = getDb();
-  if (!db || !username) return [];
+  if (!db || !username) return {};
   try {
-    const doc = await db.collection('pidex_trade_wallets').doc(username).get();
-    return doc.exists ? (doc.data().mainnet || []) : [];
-  } catch { return []; }
+    const doc = await db.collection('pidex_address_aliases').doc(username).get();
+    return doc.exists ? (doc.data().aliases || {}) : {};
+  } catch { return {}; }
+}
+
+export async function setAddressAlias(username, address, alias) {
+  const db = getDb();
+  if (!db || !username || !address) return;
+  try {
+    await db.collection('pidex_address_aliases').doc(username).set({
+      aliases: { [address]: alias },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch { /* 실패해도 각 목록 자체의 alias로 표시되므로 무시 */ }
+}
+
+async function syncAddressAliasesFromList(username, list) {
+  if (!username || !list?.length) return;
+  const patch = {};
+  for (const w of list) if (w.address && w.alias) patch[w.address] = w.alias;
+  if (!Object.keys(patch).length) return;
+  const db = getDb();
+  if (!db) return;
+  try {
+    await db.collection('pidex_address_aliases').doc(username).set({
+      aliases: patch,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch { /* 실패해도 무시 — 다음 저장 때 다시 시도됨 */ }
 }
 
 // 파이덱스앱 지갑 탭 (테스트넷) — 서버가 원본, pidex_wallets 컬렉션
@@ -44,6 +71,7 @@ export async function saveWalletsServer(username, wallets) {
     wallets,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
+  await syncAddressAliasesFromList(username, wallets);
 }
 
 // MM 탭 — AMM 실계좌 LP 포지션 추적 (서버가 원본, pidex_lp_positions 컬렉션)
@@ -79,6 +107,7 @@ export async function registerInHackWatch(username, address, alias) {
   if (wallets.length >= HACK_WATCH_MAX) return 'full';
   wallets.push({ id: `w${Date.now()}`, address, alias });
   await docRef.set({ watchList: wallets, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await setAddressAlias(username, address, alias);
   return 'added';
 }
 
@@ -93,5 +122,6 @@ export async function registerInHackWallet(username, address, alias) {
   if (wallets.length >= HACK_WALLET_MAX) return 'full';
   wallets.push({ id: `h${Date.now()}`, address, alias, addedAt: Date.now() });
   await docRef.set({ wallets, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await setAddressAlias(username, address, alias);
   return 'added';
 }
