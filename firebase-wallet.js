@@ -17,6 +17,16 @@ export function getDb() {
   return _db;
 }
 
+// 거래 지갑 별칭 (읽기 전용) — 등록/관리는 퀴즈파이 앱에서만, 여기서는 거래내역 별칭 표시용으로만 읽음
+export async function fetchTradeAliasesReadOnly(username) {
+  const db = getDb();
+  if (!db || !username) return [];
+  try {
+    const doc = await db.collection('pidex_trade_wallets').doc(username).get();
+    return doc.exists ? (doc.data().mainnet || []) : [];
+  } catch { return []; }
+}
+
 // 파이덱스앱 지갑 탭 (테스트넷) — 서버가 원본, pidex_wallets 컬렉션
 export const PIDEX_WALLET_MAX = 30;
 

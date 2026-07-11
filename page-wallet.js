@@ -6,7 +6,7 @@ import { t } from './i18n.js';
 import { currentUser } from './pi-sdk.js';
 import {
   fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
-  registerInHackWatch, registerInHackWallet,
+  registerInHackWatch, registerInHackWallet, fetchTradeAliasesReadOnly,
 } from './firebase-wallet.js';
 
 const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목록 자체는 서버가 원본
@@ -15,6 +15,16 @@ function getActiveId()   { return localStorage.getItem(ACTIVE_KEY); }
 function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
 function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
 function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
+
+// ─── 거래 지갑 별칭 (읽기 전용 — 등록/관리는 퀴즈파이 앱에서) ──────────
+let tradeAliasMap = new Map();
+function aliasFor(addr) { return addr ? tradeAliasMap.get(addr) : undefined; }
+async function loadTradeAliasMap() {
+  const username = getUsername();
+  const list = await fetchTradeAliasesReadOnly(username);
+  tradeAliasMap = new Map(list.map(w => [w.address, w.alias]));
+}
+loadTradeAliasMap();
 
 // ─── 주소 컨텍스트 메뉴 ─────────────────────────────────────
 
@@ -487,7 +497,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
 function txRowHtml(op, walletAlias) {
   const isIn   = op.isIncoming;
   const other  = isIn ? op.from : op.to;
-  const short  = other ? `${other.slice(0, 4)}···${other.slice(-3)}` : '?';
+  const short  = other ? (aliasFor(other) || `${other.slice(0, 4)}···${other.slice(-3)}`) : '?';
   const asset  = op.asset_code ?? (op.asset_type === 'native' ? 'π' : (op.asset_type ?? '?'));
   const amount = parseFloat(op.amount ?? 0).toFixed(2);
   const date   = op.created_at ? new Date(op.created_at).toLocaleDateString() : '';
