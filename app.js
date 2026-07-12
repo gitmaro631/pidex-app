@@ -141,7 +141,10 @@ async function doLogin() {
   if (errEl) errEl.style.display = 'none';
   try {
     const auth = await authenticate();
-    document.getElementById('header-username').textContent = auth.user.username ?? 'unknown';
+    const usernameEl = document.getElementById('header-username');
+    usernameEl.textContent = auth.user.username ?? 'unknown';
+    usernameEl.style.cursor = 'pointer';
+    usernameEl.onclick = () => openAdminMessageDialog();
 
     if (auth.user.wallet_address) {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
@@ -349,6 +352,7 @@ function _showNoticePopup(notices, idx) {
       <div style="display:flex;gap:4px;margin-bottom:10px;">
         <button class="admin-notice-tab active" data-tab="notice" style="flex:1;padding:6px;border:none;border-radius:6px;background:var(--accent,#6c5ce7);color:#fff;font-size:12px;cursor:pointer;">📢 공지</button>
         <button class="admin-notice-tab" data-tab="stats" style="flex:1;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.08);color:#ccc;font-size:12px;cursor:pointer;">📊 통계</button>
+        <button class="admin-notice-tab" data-tab="messages" style="flex:1;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.08);color:#ccc;font-size:12px;cursor:pointer;">${t('admin_tab_messages')}</button>
       </div>` : ''}
       <div id="notice-panel-notice">
         <div class="notice-body">${text.replace(/\n/g, '<br>')}</div>
@@ -365,15 +369,18 @@ function _showNoticePopup(notices, idx) {
         <button class="notice-close-btn" id="notice-close-btn">${t('notice_confirm')}</button>
       </div>
       ${isAdmin ? `<div id="notice-panel-stats" class="hidden" style="max-height:60vh;overflow-y:auto;background:var(--bg2,#1a1d27);border-radius:10px;padding:12px;"></div>` : ''}
+      ${isAdmin ? `<div id="notice-panel-messages" class="hidden" style="max-height:60vh;overflow-y:auto;background:var(--bg2,#1a1d27);border-radius:10px;padding:12px;"></div>` : ''}
     </div>
   `;
   document.body.appendChild(overlay);
   overlay.querySelector('#notice-prev')?.addEventListener('click', () => { overlay.remove(); _showNoticePopup(notices, idx - 1); });
   overlay.querySelector('#notice-next')?.addEventListener('click', () => { overlay.remove(); _showNoticePopup(notices, idx + 1); });
   if (isAdmin) {
-    const tabs        = overlay.querySelectorAll('.admin-notice-tab');
-    const noticePanel = overlay.querySelector('#notice-panel-notice');
-    const statsPanel  = overlay.querySelector('#notice-panel-stats');
+    const tabs         = overlay.querySelectorAll('.admin-notice-tab');
+    const noticePanel  = overlay.querySelector('#notice-panel-notice');
+    const statsPanel   = overlay.querySelector('#notice-panel-stats');
+    const messagesPanel = overlay.querySelector('#notice-panel-messages');
+    const panels = { notice: noticePanel, stats: statsPanel, messages: messagesPanel };
     tabs.forEach(btn => {
       btn.addEventListener('click', () => {
         tabs.forEach(b => {
@@ -382,12 +389,15 @@ function _showNoticePopup(notices, idx) {
           b.style.background = on ? 'var(--accent,#6c5ce7)' : 'rgba(255,255,255,0.08)';
           b.style.color = on ? '#fff' : '#ccc';
         });
-        const showStats = btn.dataset.tab === 'stats';
-        noticePanel.classList.toggle('hidden', showStats);
-        statsPanel.classList.toggle('hidden', !showStats);
-        if (showStats && !statsPanel.dataset.loaded) {
+        const activeTab = btn.dataset.tab;
+        Object.entries(panels).forEach(([key, el]) => el.classList.toggle('hidden', key !== activeTab));
+        if (activeTab === 'stats' && !statsPanel.dataset.loaded) {
           statsPanel.dataset.loaded = '1';
           loadAndRenderAdminStats(statsPanel);
+        }
+        if (activeTab === 'messages' && !messagesPanel.dataset.loaded) {
+          messagesPanel.dataset.loaded = '1';
+          loadAndRenderAdminMessages(messagesPanel);
         }
       });
     });
@@ -399,6 +409,76 @@ function _showNoticePopup(notices, idx) {
     }
     overlay.remove();
   });
+}
+
+// ── 관리자에게 메시지 보내기 (헤더 아이디 클릭) ───────────────
+const MESSAGES_COL = 'admin_messages';
+
+function openAdminMessageDialog() {
+  const username = getLoggedInUsername();
+  if (!username || username === ADMIN_USERNAME) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:340px;">
+      <div class="modal-header"><span>${t('msg_dialog_title')}</span><button class="modal-close" id="am-x">✕</button></div>
+      <div id="am-body" style="padding:16px;">
+        <textarea id="am-text" rows="5" class="form-input" placeholder="${t('msg_dialog_placeholder')}" style="width:100%;resize:vertical;"></textarea>
+        <p id="am-err" style="color:var(--red,#f87171);font-size:11px;min-height:16px;margin-top:4px;"></p>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn-outline" id="am-cancel" style="flex:1;">${t('msg_cancel')}</button>
+          <button class="btn-primary" id="am-send" style="flex:1;">${t('msg_send')}</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#am-x').onclick = close;
+  overlay.querySelector('#am-cancel').onclick = close;
+  overlay.querySelector('#am-send').onclick = async () => {
+    const text  = overlay.querySelector('#am-text').value.trim();
+    const errEl = overlay.querySelector('#am-err');
+    const btn   = overlay.querySelector('#am-send');
+    if (!text) { errEl.textContent = t('msg_required'); return; }
+    const db = getDb();
+    if (!db) { errEl.textContent = t('msg_error'); return; }
+    btn.disabled = true;
+    try {
+      await db.collection(MESSAGES_COL).add({
+        username, app: 'pidex_app', text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      overlay.querySelector('#am-body').innerHTML = `<p style="text-align:center;padding:20px 0;color:var(--green,#22c55e);">✅ ${t('msg_sent')}</p>`;
+      setTimeout(close, 900);
+    } catch {
+      errEl.textContent = t('msg_send_fail');
+      btn.disabled = false;
+    }
+  };
+}
+
+async function loadAndRenderAdminMessages(el) {
+  el.innerHTML = `<p style="color:#888;font-size:13px;padding:16px 0;text-align:center;">${t('admin_msg_loading')}</p>`;
+  try {
+    const db = getDb();
+    if (!db) throw new Error('no db');
+    const snap = await db.collection(MESSAGES_COL).orderBy('createdAt', 'desc').limit(100).get();
+    if (snap.empty) { el.innerHTML = `<p style="color:#888;font-size:13px;padding:16px 0;text-align:center;">${t('admin_msg_empty')}</p>`; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const date = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleString() : '';
+      return `
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:3px;">
+            <span>👤 ${m.username || '?'} · ${m.app === 'pidex_app' ? '파이덱스' : '퀴즈파이'}</span>
+            <span>${date}</span>
+          </div>
+          <div style="font-size:13px;color:#eee;white-space:pre-wrap;">${(m.text || '').replace(/</g,'&lt;')}</div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = `<p style="color:var(--red,#f87171);font-size:13px;padding:16px 0;">${t('admin_msg_load_fail')}: ${e.message}</p>`;
+  }
 }
 
 function renderHeaderButtons() {
