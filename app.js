@@ -200,6 +200,121 @@ async function showNoticeIfNeeded() {
   _showNoticePopup(notices, notices.length - 1);
 }
 
+const ADMIN_USERNAME    = 'cam1998pi';
+const STATS_HISTORY_COL = 'admin_stats_history';
+const QUIZ_MODES_LIST    = ['miner', 'pioneer', 'validator'];
+const SURVIVAL_MAPS_LIST = ['jungle', 'desert', 'mountain', 'underwater', 'space'];
+
+function getLoggedInUsername() {
+  return document.getElementById('header-username')?.textContent?.trim() || '';
+}
+
+async function safeGet(db, col) {
+  try { return await db.collection(col).get(); } catch { return null; }
+}
+function sumField(snap, field) {
+  if (!snap) return 0;
+  return snap.docs.reduce((s, d) => s + (d.data()[field]?.length || 0), 0);
+}
+function userIdsOf(snap) {
+  return snap ? snap.docs.map(d => d.id) : [];
+}
+
+async function computeAdminStats(db) {
+  const [hackSnap, pidexSnap, watchSnap, tradeSnap, reportSnap, opinionSnap, ...rest] = await Promise.all([
+    safeGet(db, 'hack_pending_wallets'),
+    safeGet(db, 'pidex_wallets'),
+    safeGet(db, 'pidex_watch_list'),
+    safeGet(db, 'pidex_trade_wallets'),
+    safeGet(db, 'hack_reports'),
+    safeGet(db, 'quiz_opinions'),
+    ...QUIZ_MODES_LIST.map(m => safeGet(db, `leaderboard_${m}`)),
+    ...SURVIVAL_MAPS_LIST.map(m => safeGet(db, `survival_${m}`)),
+  ]);
+  const leaderboardSnaps = rest.slice(0, QUIZ_MODES_LIST.length);
+  const survivalSnaps    = rest.slice(QUIZ_MODES_LIST.length);
+
+  const walletUsers = new Set([...userIdsOf(hackSnap), ...userIdsOf(pidexSnap)]);
+  const quizUsers = new Set();
+  leaderboardSnaps.forEach(snap => userIdsOf(snap).forEach(id => quizUsers.add(id)));
+  const survivalUsers = new Set();
+  survivalSnaps.forEach(snap => userIdsOf(snap).forEach(id => survivalUsers.add(id)));
+
+  return {
+    walletUsers: walletUsers.size,
+    walletCount: sumField(hackSnap, 'wallets') + sumField(pidexSnap, 'wallets'),
+    watchUsers: watchSnap ? watchSnap.size : 0,
+    watchCount: sumField(watchSnap, 'watchList'),
+    tradeUsers: tradeSnap ? tradeSnap.size : 0,
+    tradeCount: sumField(tradeSnap, 'mainnet'),
+    reportCount: reportSnap ? reportSnap.size : 0,
+    opinionCount: opinionSnap ? opinionSnap.size : 0,
+    quizUsers: quizUsers.size,
+    survivalUsers: survivalUsers.size,
+  };
+}
+
+async function loadAdminStatsWithGrowth(db) {
+  const current = await computeAdminStats(db);
+  let prev = null;
+  try {
+    const histSnap = await db.collection(STATS_HISTORY_COL).orderBy('date', 'desc').limit(2).get();
+    const docs  = histSnap.docs.map(d => d.data());
+    const today = new Date().toISOString().slice(0, 10);
+    prev = docs.find(d => d.date !== today) || null;
+    await db.collection(STATS_HISTORY_COL).doc(today).set({
+      date: today, ...current, updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch { /* 기록 실패해도 현재 통계는 보여줌 */ }
+  return { current, prev };
+}
+
+async function fetchSubscriberCount() {
+  try {
+    const r = await fetch(`/api/admin-stats?username=${encodeURIComponent(ADMIN_USERNAME)}`);
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data.subscriberCount ?? null;
+  } catch { return null; }
+}
+
+async function loadAndRenderAdminStats(el) {
+  el.innerHTML = `<p style="color:#888;font-size:13px;padding:16px 0;text-align:center;">불러오는 중...</p>`;
+  try {
+    const db = getDb();
+    const [{ current, prev }, subscriberCount] = await Promise.all([
+      loadAdminStatsWithGrowth(db),
+      fetchSubscriberCount(),
+    ]);
+    const row = (label, value, prevValue) => {
+      const delta = (prevValue != null) ? value - prevValue : null;
+      const deltaStr = delta == null ? '' :
+        (delta > 0 ? ` <span style="color:#22c55e;">+${delta}</span>` :
+         delta < 0 ? ` <span style="color:#f87171;">${delta}</span>` :
+                      ` <span style="color:#888;">±0</span>`);
+      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">
+        <span style="color:#ccc;">${label}</span><span style="font-weight:600;">${value}${deltaStr}</span>
+      </div>`;
+    };
+    el.innerHTML = `
+      <div style="font-size:11px;color:#888;margin-bottom:8px;">${prev ? `지난 확인(${prev.date}) 대비 증감` : '첫 확인 — 다음부터 증감이 표시돼요'}</div>
+      ${row('지갑 등록 유저 수 (두 앱 합산)', current.walletUsers, prev?.walletUsers)}
+      ${row('등록된 지갑 개수 (두 앱 합산)', current.walletCount, prev?.walletCount)}
+      ${row('관심지갑 등록 유저 수', current.watchUsers, prev?.watchUsers)}
+      ${row('관심지갑 개수', current.watchCount, prev?.watchCount)}
+      ${row('거래지갑 등록 유저 수', current.tradeUsers, prev?.tradeUsers)}
+      ${row('거래지갑 개수', current.tradeCount, prev?.tradeCount)}
+      ${row('해킹 신고 건수', current.reportCount, prev?.reportCount)}
+      ${row('의견 게시글 수', current.opinionCount, prev?.opinionCount)}
+      ${row('퀴즈 참여 유저 수', current.quizUsers, prev?.quizUsers)}
+      ${row('생존게임 참여 유저 수', current.survivalUsers, prev?.survivalUsers)}
+      ${row('구독자 수 (파이덱스 앱)', subscriberCount ?? '?', null)}
+    `;
+  } catch (e) {
+    el.innerHTML = `<p style="color:#f87171;font-size:13px;padding:16px 0;">통계 로드 실패: ${e.message}</p>`;
+  }
+}
+
 function _showNoticePopup(notices, idx) {
   const SKIP_KEY    = 'notice_skip_until';
   const VERSION_KEY = 'notice_skip_version';
@@ -208,29 +323,60 @@ function _showNoticePopup(notices, idx) {
   const lang    = getLang();
   const text    = notice[lang] || notice.en;
   const total   = notices.length;
+  const isAdmin = getLoggedInUsername() === ADMIN_USERNAME;
   document.getElementById('notice-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'notice-overlay';
   overlay.className = 'notice-overlay';
   overlay.innerHTML = `
     <div class="notice-box">
-      <div class="notice-body">${text.replace(/\n/g, '<br>')}</div>
-      ${total > 1 ? `
-      <div class="notice-nav">
-        <button class="notice-nav-btn" id="notice-prev"${idx === 0 ? ' disabled' : ''}>←</button>
-        <span class="notice-nav-page">${idx + 1} / ${total}</span>
-        <button class="notice-nav-btn" id="notice-next"${idx === total - 1 ? ' disabled' : ''}>→</button>
+      ${isAdmin ? `
+      <div style="display:flex;gap:4px;margin-bottom:10px;">
+        <button class="admin-notice-tab active" data-tab="notice" style="flex:1;padding:6px;border:none;border-radius:6px;background:var(--accent,#6c5ce7);color:#fff;font-size:12px;cursor:pointer;">📢 공지</button>
+        <button class="admin-notice-tab" data-tab="stats" style="flex:1;padding:6px;border:none;border-radius:6px;background:rgba(255,255,255,0.08);color:#ccc;font-size:12px;cursor:pointer;">📊 통계</button>
       </div>` : ''}
-      <label class="notice-skip-label">
-        <input type="checkbox" id="notice-skip-check">
-        <span>${t('notice_skip_week')}</span>
-      </label>
-      <button class="notice-close-btn" id="notice-close-btn">${t('notice_confirm')}</button>
+      <div id="notice-panel-notice">
+        <div class="notice-body">${text.replace(/\n/g, '<br>')}</div>
+        ${total > 1 ? `
+        <div class="notice-nav">
+          <button class="notice-nav-btn" id="notice-prev"${idx === 0 ? ' disabled' : ''}>←</button>
+          <span class="notice-nav-page">${idx + 1} / ${total}</span>
+          <button class="notice-nav-btn" id="notice-next"${idx === total - 1 ? ' disabled' : ''}>→</button>
+        </div>` : ''}
+        <label class="notice-skip-label">
+          <input type="checkbox" id="notice-skip-check">
+          <span>${t('notice_skip_week')}</span>
+        </label>
+        <button class="notice-close-btn" id="notice-close-btn">${t('notice_confirm')}</button>
+      </div>
+      ${isAdmin ? `<div id="notice-panel-stats" class="hidden" style="max-height:60vh;overflow-y:auto;"></div>` : ''}
     </div>
   `;
   document.body.appendChild(overlay);
   overlay.querySelector('#notice-prev')?.addEventListener('click', () => { overlay.remove(); _showNoticePopup(notices, idx - 1); });
   overlay.querySelector('#notice-next')?.addEventListener('click', () => { overlay.remove(); _showNoticePopup(notices, idx + 1); });
+  if (isAdmin) {
+    const tabs        = overlay.querySelectorAll('.admin-notice-tab');
+    const noticePanel = overlay.querySelector('#notice-panel-notice');
+    const statsPanel  = overlay.querySelector('#notice-panel-stats');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => {
+          const on = b === btn;
+          b.classList.toggle('active', on);
+          b.style.background = on ? 'var(--accent,#6c5ce7)' : 'rgba(255,255,255,0.08)';
+          b.style.color = on ? '#fff' : '#ccc';
+        });
+        const showStats = btn.dataset.tab === 'stats';
+        noticePanel.classList.toggle('hidden', showStats);
+        statsPanel.classList.toggle('hidden', !showStats);
+        if (showStats && !statsPanel.dataset.loaded) {
+          statsPanel.dataset.loaded = '1';
+          loadAndRenderAdminStats(statsPanel);
+        }
+      });
+    });
+  }
   overlay.querySelector('#notice-close-btn').addEventListener('click', () => {
     if (overlay.querySelector('#notice-skip-check').checked) {
       localStorage.setItem(SKIP_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
