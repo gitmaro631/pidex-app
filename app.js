@@ -164,6 +164,7 @@ async function doLogin() {
     renderHeaderButtons();
     setWalletTabVisible(true);
     showNoticeIfNeeded();
+    maybeRecordDailyStatsSnapshot();
     switchPage('dashboard');
   } catch (e) {
     btn.disabled = false;
@@ -267,6 +268,20 @@ async function loadAdminStatsWithGrowth(db) {
     });
   } catch { /* 기록 실패해도 현재 통계는 보여줌 */ }
   return { current, prev };
+}
+
+// 관리자가 통계 탭을 안 열어도, 아무 유저나 접속하면 그날 스냅샷이 자동으로 한 번 기록됨
+async function maybeRecordDailyStatsSnapshot() {
+  try {
+    const db = getDb();
+    if (!db) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const ref   = db.collection(STATS_HISTORY_COL).doc(today);
+    const snap  = await ref.get();
+    if (snap.exists) return;
+    const current = await computeAdminStats(db);
+    await ref.set({ date: today, ...current, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  } catch { /* 조용히 무시 — 일반 유저 경험에 영향 없어야 함 */ }
 }
 
 async function fetchSubscriberCount() {
