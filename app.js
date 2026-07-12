@@ -364,7 +364,7 @@ function _showNoticePopup(notices, idx) {
         </label>
         <button class="notice-close-btn" id="notice-close-btn">${t('notice_confirm')}</button>
       </div>
-      ${isAdmin ? `<div id="notice-panel-stats" class="hidden" style="max-height:60vh;overflow-y:auto;"></div>` : ''}
+      ${isAdmin ? `<div id="notice-panel-stats" class="hidden" style="max-height:60vh;overflow-y:auto;background:var(--bg2,#1a1d27);border-radius:10px;padding:12px;"></div>` : ''}
     </div>
   `;
   document.body.appendChild(overlay);
