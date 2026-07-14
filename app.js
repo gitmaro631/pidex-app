@@ -225,13 +225,14 @@ function userIdsOf(snap) {
 }
 
 async function computeAdminStats(db) {
-  const [hackSnap, pidexSnap, watchSnap, tradeSnap, reportSnap, opinionSnap, ...rest] = await Promise.all([
+  const [hackSnap, pidexSnap, watchSnap, tradeSnap, reportSnap, opinionSnap, surveySnap, ...rest] = await Promise.all([
     safeGet(db, 'hack_pending_wallets'),
     safeGet(db, 'pidex_wallets'),
     safeGet(db, 'pidex_watch_list'),
     safeGet(db, 'pidex_trade_wallets'),
     safeGet(db, 'hack_reports'),
     safeGet(db, 'quiz_opinions'),
+    safeGet(db, 'surveys'),
     ...QUIZ_MODES_LIST.map(m => safeGet(db, `leaderboard_${m}`)),
     ...SURVIVAL_MAPS_LIST.map(m => safeGet(db, `survival_${m}`)),
   ]);
@@ -255,6 +256,7 @@ async function computeAdminStats(db) {
     opinionCount: opinionSnap ? opinionSnap.size : 0,
     quizUsers: quizUsers.size,
     survivalUsers: survivalUsers.size,
+    surveyUsers: surveySnap ? surveySnap.size : 0,
   };
 }
 
@@ -326,6 +328,7 @@ async function loadAndRenderAdminStats(el) {
       ${row('의견 게시글 수', current.opinionCount, prev?.opinionCount)}
       ${row('퀴즈 참여 유저 수', current.quizUsers, prev?.quizUsers)}
       ${row('생존게임 참여 유저 수', current.survivalUsers, prev?.survivalUsers)}
+      ${row('설문조사 참여 유저 수', current.surveyUsers, prev?.surveyUsers)}
       ${row('구독자 수 (파이덱스 앱)', subscriberCount ?? '?', null)}
     `;
   } catch (e) {
