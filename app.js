@@ -207,7 +207,7 @@ async function showNoticeIfNeeded() {
 const ADMIN_USERNAME    = 'cam1998pi';
 const STATS_HISTORY_COL = 'admin_stats_history';
 const QUIZ_MODES_LIST    = ['miner', 'pioneer', 'validator'];
-const SURVIVAL_MAPS_LIST = ['jungle', 'desert', 'mountain', 'underwater', 'space'];
+const SURVIVAL_MAPS_LIST = ['dungeon', 'isekai', 'zombie', 'ruins', 'derelict'];
 
 function getLoggedInUsername() {
   return document.getElementById('header-username')?.textContent?.trim() || '';
