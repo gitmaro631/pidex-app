@@ -7,18 +7,18 @@ import { renderWallet, loadAddressAliases } from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
-  version: '2026-07-12',
-  ko: '📢 업데이트 안내 (2026-07-12)\n\n① 지갑 별칭이 퀴즈파이 앱과 통합되어, 어디서 등록한 별칭이든 거래내역에 자동으로 표시됩니다',
-  en: "📢 Update Notice (2026-07-12)\n\n① Wallet aliases are now unified with the PiDEX Quiz app — any alias you've registered will automatically show in transaction history",
-  id: "📢 Pemberitahuan Pembaruan (2026-07-12)\n\n① Alias dompet kini terpadu dengan aplikasi PiDEX Quiz — alias apa pun yang Anda daftarkan akan otomatis muncul di riwayat transaksi",
-  zh: '📢 更新通知 (2026-07-12)\n\n① 钱包别名现已与PiDEX Quiz应用统一，无论在哪里注册的别名都会自动显示在交易记录中',
-  ja: '📢 アップデートのお知らせ (2026-07-12)\n\n① ウォレットのエイリアスがPiDEX Quizアプリと統合され、どこで登録したエイリアスでも取引履歴に自動で表示されます',
-  es: "📢 Aviso de actualización (2026-07-12)\n\n① Los alias de cartera ahora están unificados con la app PiDEX Quiz — cualquier alias que registre aparecerá automáticamente en el historial de transacciones",
-  vi: "📢 Thông báo cập nhật (2026-07-12)\n\n① Biệt danh ví giờ đã hợp nhất với ứng dụng PiDEX Quiz — bất kỳ biệt danh nào bạn đăng ký sẽ tự động hiển thị trong lịch sử giao dịch",
-  hi: "📢 अपडेट सूचना (2026-07-12)\n\n① वॉलेट उपनाम अब PiDEX Quiz ऐप के साथ एकीकृत हो गए हैं — आपने जहां भी उपनाम पंजीकृत किया हो, वह लेनदेन इतिहास में अपने आप दिखेगा",
-  pt: "📢 Aviso de atualização (2026-07-12)\n\n① Os apelidos de carteira agora estão unificados com o app PiDEX Quiz — qualquer apelido que você registrar aparecerá automaticamente no histórico de transações",
-  tl: "📢 Abiso sa Update (2026-07-12)\n\n① Pinagsama na ang alias ng wallet sa PiDEX Quiz app — anumang alias na na-register mo ay awtomatikong lalabas sa transaction history",
-  fr: "📢 Avis de mise à jour (2026-07-12)\n\n① Les alias de portefeuille sont désormais unifiés avec l'application PiDEX Quiz — tout alias que vous enregistrez apparaît automatiquement dans l'historique des transactions",
+  version: '2026-07-21',
+  ko: "📢 업데이트 안내 (2026-07-21)\n\n① 지갑주소 메뉴 문구를 \"QuizPi 내 지갑(메인넷)\"으로 명확화\n② 지갑 별칭 저장 방식을 QuizPi 앱과 완전히 통합 — 어디서 등록해도 항상 최신 별칭이 표시됩니다",
+  en: "📢 Update Notice (2026-07-21)\n\n① Clarified the wallet address menu label to \"QuizPi My Wallet (Mainnet)\"\n② Fully unified wallet alias storage with the QuizPi app — the latest alias always shows no matter where you registered it",
+  id: "📢 Pemberitahuan Pembaruan (2026-07-21)\n\n① Memperjelas label menu alamat dompet menjadi \"Dompet Saya QuizPi (Mainnet)\"\n② Menyatukan sepenuhnya penyimpanan alias dompet dengan aplikasi QuizPi — alias terbaru selalu ditampilkan di mana pun didaftarkan",
+  zh: "📢 更新通知 (2026-07-21)\n\n① 将钱包地址菜单文字明确为\"QuizPi我的钱包（主网）\"\n② 与QuizPi应用完全统一了钱包别名的存储方式 — 无论在哪里注册，都会显示最新别名",
+  ja: "📢 アップデートのお知らせ (2026-07-21)\n\n① ウォレットアドレスメニューの表記を「QuizPiのマイウォレット（メインネット）」に明確化\n② QuizPiアプリとウォレットエイリアスの保存先を完全に統合 — どこで登録しても常に最新のエイリアスが表示されます",
+  es: "📢 Aviso de actualización (2026-07-21)\n\n① Se aclaró la etiqueta del menú de direcciones de cartera a \"Mi Cartera de QuizPi (Mainnet)\"\n② Se unificó por completo el almacenamiento de alias de cartera con la app QuizPi — el alias más reciente siempre se muestra sin importar dónde lo registres",
+  vi: "📢 Thông báo cập nhật (2026-07-21)\n\n① Làm rõ nhãn menu địa chỉ ví thành \"Ví của tôi QuizPi (Mainnet)\"\n② Hợp nhất hoàn toàn nơi lưu trữ biệt danh ví với ứng dụng QuizPi — biệt danh mới nhất luôn hiển thị bất kể đăng ký ở đâu",
+  hi: "📢 अपडेट सूचना (2026-07-21)\n\n① वॉलेट पता मेनू लेबल को \"QuizPi मेरा वॉलेट (मेननेट)\" के रूप में स्पष्ट किया गया\n② वॉलेट उपनाम संग्रहण को QuizPi ऐप के साथ पूरी तरह एकीकृत किया गया — चाहे कहीं भी पंजीकृत करें, हमेशा नवीनतम उपनाम दिखेगा",
+  pt: "📢 Aviso de atualização (2026-07-21)\n\n① Esclarecido o rótulo do menu de endereço da carteira para \"Minha Carteira QuizPi (Mainnet)\"\n② Unificado totalmente o armazenamento de apelidos de carteira com o app QuizPi — o apelido mais recente sempre aparece, não importa onde foi registrado",
+  tl: "📢 Abiso sa Update (2026-07-21)\n\n① Nilinaw ang label ng menu ng wallet address sa \"Aking Wallet sa QuizPi (Mainnet)\"\n② Ganap na pinag-isa ang imbakan ng alyas ng wallet sa QuizPi app — laging ipinapakita ang pinakabagong alyas saan man ito na-register",
+  fr: "📢 Avis de mise à jour (2026-07-21)\n\n① Clarification du libellé du menu d'adresse de portefeuille en « Mon Portefeuille QuizPi (Mainnet) »\n② Unification complète du stockage des alias de portefeuille avec l'application QuizPi — le dernier alias s'affiche toujours, peu importe où il a été enregistré",
 };
 import { isSubscribed } from './util-storage.js';
 import { getDb } from './firebase-wallet.js';
