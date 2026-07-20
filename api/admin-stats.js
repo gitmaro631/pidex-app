@@ -1,8 +1,11 @@
+import { verifyPiUser } from './_verifyPiUser.js';
+
 const ADMIN_USERNAME = 'cam1998pi';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  const { username } = req.query;
+  const { accessToken } = req.query;
+  const username = await verifyPiUser(accessToken);
   if (username !== ADMIN_USERNAME) return res.status(403).json({ error: 'forbidden' });
 
   const url = process.env.KV_REST_API_URL;

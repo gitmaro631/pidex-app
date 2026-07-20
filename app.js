@@ -1,4 +1,4 @@
-import { initPiSDK, authenticate } from './pi-sdk.js';
+import { initPiSDK, authenticate, currentAccessToken } from './pi-sdk.js';
 import { renderDashboard }    from './page-dashboard.js';
 import { renderTools }        from './page-tools.js';
 import { renderArbitrage }    from './page-arbitrage.js';
@@ -292,7 +292,7 @@ async function maybeRecordDailyStatsSnapshot() {
 
 async function fetchSubscriberCount() {
   try {
-    const r = await fetch(`/api/admin-stats?username=${encodeURIComponent(ADMIN_USERNAME)}`);
+    const r = await fetch(`/api/admin-stats?accessToken=${encodeURIComponent(currentAccessToken ?? '')}`);
     if (!r.ok) return null;
     const data = await r.json();
     return data.subscriberCount ?? null;

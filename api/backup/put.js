@@ -1,11 +1,16 @@
 import { gcsPutObject, validateSlotParams } from './_gcs.js';
+import { verifyPiUser } from '../_verifyPiUser.js';
 
 const WALLET_MAX = 30;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { category, username, slot, wallets } = req.body;
+    const { accessToken, category, username, slot, wallets } = req.body;
+    const verifiedUsername = await verifyPiUser(accessToken);
+    if (!verifiedUsername || verifiedUsername !== username) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
     const s = validateSlotParams(category, username, slot);
     if (!Array.isArray(wallets)) return res.status(400).json({ error: 'wallets required' });
     const trimmed = wallets.slice(0, WALLET_MAX);

@@ -3,7 +3,7 @@ import { formatPi, formatToken } from './util-format.js';
 import { showLoading, hideLoading, showToast, rerenderPage } from './app.js';
 import { setupPullToRefresh } from './page-dashboard.js';
 import { t } from './i18n.js';
-import { currentUser } from './pi-sdk.js';
+import { currentUser, currentAccessToken } from './pi-sdk.js';
 import {
   fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
   registerInHackWatch, registerInHackWallet, fetchAddressAliases, setAddressAlias,
@@ -16,6 +16,7 @@ function getActiveId()   { return localStorage.getItem(ACTIVE_KEY); }
 function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
 function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
 function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
+function esc(str)        { return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 // ─── 공용 주소 별칭 사전 (pidex_address_aliases, 두 앱 공유 — 등록/조회 전부 여기로 통일) ──
 let addressAliases = {};
@@ -188,7 +189,7 @@ async function fetchBackupSlot(category, slot) {
   const res = await fetch('/api/backup/get', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ category, username, slot }),
+    body: JSON.stringify({ accessToken: currentAccessToken, category, username, slot }),
   });
   if (!res.ok) throw new Error('backup get failed');
   return res.json();
@@ -199,7 +200,7 @@ async function putBackupSlot(category, slot, wallets) {
   const res = await fetch('/api/backup/put', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ category, username, slot, wallets }),
+    body: JSON.stringify({ accessToken: currentAccessToken, category, username, slot, wallets }),
   });
   if (!res.ok) throw new Error('backup put failed');
   return res.json();
@@ -239,7 +240,7 @@ function openBackupModal(category, currentWallets, maxCount, onApplied) {
       const slotNum = i + 1;
       const empty = !s.exists;
       const dateStr = empty ? '' : new Date(s.updatedAt).toLocaleString();
-      const aliasPreview = empty ? '' : s.wallets.map(w => w.alias).join(', ');
+      const aliasPreview = empty ? '' : s.wallets.map(w => esc(w.alias)).join(', ');
       const slotInfo = empty ? t('backup_empty') : `${s.wallets.length} · ${dateStr}`;
       return `
         <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;">
@@ -418,7 +419,7 @@ function showEditAliasDialog(wallet, allWallets, onSaved) {
       <button class="modal-close" id="md-x">✕</button>
     </div>
     <div class="modal-body">
-      <input type="text" id="md-alias" class="form-input" value="${aliasFor(wallet.address) || wallet.alias}" style="font-size:12px;" />
+      <input type="text" id="md-alias" class="form-input" value="${esc(aliasFor(wallet.address) || wallet.alias)}" style="font-size:12px;" />
       <p id="md-err" style="color:var(--red);font-size:11px;margin-top:6px;display:none;"></p>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
@@ -463,7 +464,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
     </div>
     <div class="modal-body">
       <p style="font-size:13px;margin-bottom:12px;line-height:1.5;">${t('wallet_delete_confirm')}</p>
-      <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">${aliasFor(wallet.address) || wallet.alias} · ${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">${esc(aliasFor(wallet.address) || wallet.alias)} · ${wallet.address.slice(0, 8)}···${wallet.address.slice(-8)}</p>
       <p id="md-err" style="color:var(--red);font-size:11px;margin-bottom:8px;display:none;"></p>
       <div style="display:flex;gap:8px;">
         <button class="btn-outline btn-sm" id="md-cancel" style="flex:1;">${t('wallet_change_cancel')}</button>
@@ -499,7 +500,7 @@ function showDeleteDialog(wallet, allWallets, onConfirmed) {
 function txRowHtml(op, walletAlias) {
   const isIn   = op.isIncoming;
   const other  = isIn ? op.from : op.to;
-  const short  = other ? (aliasFor(other) || `${other.slice(0, 4)}···${other.slice(-3)}`) : '?';
+  const short  = other ? esc(aliasFor(other) || `${other.slice(0, 4)}···${other.slice(-3)}`) : '?';
   const asset  = op.asset_code ?? (op.asset_type === 'native' ? 'π' : (op.asset_type ?? '?'));
   const amount = parseFloat(op.amount ?? 0).toFixed(2);
   const date   = op.created_at ? new Date(op.created_at).toLocaleDateString() : '';
@@ -606,7 +607,7 @@ async function loadWalletDetail(detailEl, wallet, allWallets) {
           }).join('')}
         </div>`;
 
-    const myAlias = aliasFor(wallet.address) || wallet.alias;
+    const myAlias = esc(aliasFor(wallet.address) || wallet.alias);
     const txHtml = payments.length === 0
       ? `<div class="card"><p class="empty-msg">${t('wallet_tx_none')}</p></div>`
       : `<div class="card" style="padding:12px;">
@@ -750,7 +751,7 @@ export async function renderWallet(container) {
         <button class="wallet-chip${w.id === active.id ? ' active' : ''}"
           data-wid="${w.id}" data-active-check="${w.address}"
           style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px solid ${w.id === active.id ? 'var(--accent)' : 'var(--border)'};background:${w.id === active.id ? 'var(--accent)' : 'transparent'};color:${w.id === active.id ? '#000' : 'var(--text)'};cursor:pointer;white-space:nowrap;">
-          ${aliasFor(w.address) || w.alias}
+          ${esc(aliasFor(w.address) || w.alias)}
         </button>`).join('')}
       ${wallets.length < PIDEX_WALLET_MAX ? `<button id="btn-add-wallet"
         style="padding:4px 12px;border-radius:20px;font-size:12px;border:1px dashed var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">
