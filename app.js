@@ -323,8 +323,8 @@ async function loadAndRenderAdminStats(el) {
       ${row('등록된 지갑 개수 (두 앱 합산)', current.walletCount, prev?.walletCount)}
       ${row('관심지갑 등록 유저 수', current.watchUsers, prev?.watchUsers)}
       ${row('관심지갑 개수', current.watchCount, prev?.watchCount)}
-      ${row('거래지갑 등록 유저 수', current.tradeUsers, prev?.tradeUsers)}
-      ${row('거래지갑 개수', current.tradeCount, prev?.tradeCount)}
+      ${row('별칭지갑 등록 유저 수', current.tradeUsers, prev?.tradeUsers)}
+      ${row('별칭지갑 개수', current.tradeCount, prev?.tradeCount)}
       ${row('해킹 신고 건수', current.reportCount, prev?.reportCount)}
       ${row('의견 게시글 수', current.opinionCount, prev?.opinionCount)}
       ${row('퀴즈 참여 유저 수', current.quizUsers, prev?.quizUsers)}
