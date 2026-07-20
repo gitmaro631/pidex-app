@@ -6,7 +6,8 @@ import { t } from './i18n.js';
 import { currentUser } from './pi-sdk.js';
 import {
   fetchWalletsServer, saveWalletsServer, PIDEX_WALLET_MAX,
-  registerInHackWatch, registerInHackWallet, fetchAddressAliases,
+  registerInHackWatch, registerInHackWallet, fetchAddressAliases, setAddressAlias,
+  migrateAddressAliasesIfNeeded,
 } from './firebase-wallet.js';
 
 const ACTIVE_KEY = 'pidex_active_wallet'; // UI 선택 상태만 로컬 — 목록 자체는 서버가 원본
@@ -16,11 +17,14 @@ function setActiveId(id) { localStorage.setItem(ACTIVE_KEY, id); }
 function genId()         { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
 function getUsername()   { return currentUser?.username || document.getElementById('header-username')?.textContent?.trim() || null; }
 
-// ─── 공용 주소 별칭 사전 (읽기 전용 — 등록/관리는 퀴즈파이 앱에서 통합) ──────────
+// ─── 공용 주소 별칭 사전 (pidex_address_aliases, 두 앱 공유 — 등록/조회 전부 여기로 통일) ──
 let addressAliases = {};
 function aliasFor(addr) { return addr ? addressAliases[addr] : undefined; }
-async function loadAddressAliases() {
-  addressAliases = await fetchAddressAliases(getUsername());
+export async function loadAddressAliases() {
+  const username = getUsername();
+  addressAliases = username
+    ? await migrateAddressAliasesIfNeeded(username) // 로그인 후엔 1회성 정리까지 겸함(멱등)
+    : await fetchAddressAliases(username);
 }
 loadAddressAliases();
 
@@ -378,12 +382,13 @@ function showAddDialog(currentWallets, onSaved) {
     const username = getUsername();
     if (!username) { errEl.textContent = t('wallet_cloud_fail'); errEl.style.display = ''; return; }
 
-    const wallet = { id: genId(), address: addr, alias };
+    const wallet = { id: genId(), address: addr };
     saveBtn.disabled = true;
 
     const doSave = async () => {
       try {
         await saveWalletsServer(username, [...currentWallets, wallet]);
+        await setAddressAlias(username, addr, alias);
         setActiveId(wallet.id);
         close();
         onSaved();
@@ -435,10 +440,9 @@ function showEditAliasDialog(wallet, allWallets, onSaved) {
     const username = getUsername();
     if (!username) { errEl.textContent = t('wallet_cloud_fail'); errEl.style.display = ''; return; }
 
-    const updated = allWallets.map(w => w.id === wallet.id ? { ...w, alias } : w);
     saveBtn.disabled = true;
     try {
-      await saveWalletsServer(username, updated);
+      await setAddressAlias(username, wallet.address, alias);
       close();
       onSaved();
     } catch {
@@ -724,9 +728,10 @@ export async function renderWallet(container) {
 
   // 최초 1회: Pi SDK 지갑 자동 등록 (서버에 아무것도 없을 때만)
   if (!wallets.length && currentUser?.wallet_address) {
-    const autoWallet = { id: genId(), address: currentUser.wallet_address, alias: 'Pi Wallet' };
+    const autoWallet = { id: genId(), address: currentUser.wallet_address };
     try {
       await saveWalletsServer(username, [autoWallet]);
+      await setAddressAlias(username, autoWallet.address, 'Pi Wallet');
       wallets = [autoWallet];
     } catch { /* 실패해도 빈 상태로 계속 진행 */ }
   }

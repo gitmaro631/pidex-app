@@ -3,7 +3,7 @@ import { renderDashboard }    from './page-dashboard.js';
 import { renderTools }        from './page-tools.js';
 import { renderArbitrage }    from './page-arbitrage.js';
 import { renderMM }           from './page-mm.js';
-import { renderWallet }       from './page-wallet.js';
+import { renderWallet, loadAddressAliases } from './page-wallet.js';
 import { renderSubscription } from './page-subscription.js';
 import { t, getLang, setLang } from './i18n.js';
 const NOTICE = {
@@ -145,6 +145,7 @@ async function doLogin() {
     usernameEl.textContent = auth.user.username ?? 'unknown';
     usernameEl.style.cursor = 'pointer';
     usernameEl.onclick = () => openAdminMessageDialog();
+    loadAddressAliases(); // 로그인 완료 후 별칭 사전 로드(+ 필요시 1회성 정리) — fire-and-forget
 
     if (auth.user.wallet_address) {
       localStorage.setItem('stellar_pub_key', auth.user.wallet_address);
