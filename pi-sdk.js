@@ -1,6 +1,32 @@
 export let currentUser = null;
 export let currentAccessToken = null;
 
+const FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyD7mL96caMFNv6BxJDU21bLx2Xt9f78WI8',
+  authDomain:        'pidex-quiz.firebaseapp.com',
+  projectId:         'pidex-quiz',
+  storageBucket:     'pidex-quiz.firebasestorage.app',
+  messagingSenderId: '235433934182',
+  appId:             '1:235433934182:web:272e11233e3a077728dca7',
+};
+
+// Pi accessToken을 서버에서 검증받아 Firebase 커스텀 토큰으로 교환 후 로그인
+// — 이 로그인이 끝나야 Firestore 보안규칙의 request.auth가 채워짐
+async function signInFirebase(accessToken) {
+  try {
+    if (typeof firebase === 'undefined') return;
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const res = await fetch('/api/firebase-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken }),
+    });
+    if (!res.ok) return;
+    const { token } = await res.json();
+    if (token) await firebase.auth().signInWithCustomToken(token);
+  } catch { /* 실패해도 로그인 자체는 진행 — Firestore 호출은 이후 실패할 수 있음 */ }
+}
+
 async function serverApprove(paymentId) {
   const res = await fetch('/api/payments/approve', {
     method: 'POST',
@@ -88,6 +114,7 @@ export async function authenticate() {
 
         const username = currentUser?.username;
         if (username) syncSubscription(username);
+        if (currentAccessToken) await signInFirebase(currentAccessToken);
         resolve(auth);
       })
       .catch(reject);
