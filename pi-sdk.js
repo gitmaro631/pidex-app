@@ -10,13 +10,12 @@ const FIREBASE_CONFIG = {
   appId:             '1:235433934182:web:272e11233e3a077728dca7',
 };
 
-// 임시 디버그용 — Firestore 규칙 적용 전 Firebase 로그인 성공 여부를 화면에서 바로 확인하기 위함.
-// 정상 동작 확인되면 성공 토스트는 지우고 실패 토스트만 남길 예정.
-function showAuthToast(msg, ok) {
+// Firebase 로그인 실패는 조용히 넘어가지 않고 화면에 표시 — 원인 파악용
+function showAuthToast(msg) {
   try {
     const el = document.createElement('div');
     el.textContent = msg;
-    el.style.cssText = `position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;padding:10px 16px;border-radius:8px;font-size:13px;color:#fff;background:${ok ? '#22c55e' : '#ef4444'};box-shadow:0 2px 8px rgba(0,0,0,0.3);max-width:90vw;text-align:center;`;
+    el.style.cssText = `position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;padding:10px 16px;border-radius:8px;font-size:13px;color:#fff;background:#ef4444;box-shadow:0 2px 8px rgba(0,0,0,0.3);max-width:90vw;text-align:center;`;
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 4000);
   } catch { /* DOM 준비 전이면 조용히 무시 */ }
@@ -26,20 +25,19 @@ function showAuthToast(msg, ok) {
 // — 이 로그인이 끝나야 Firestore 보안규칙의 request.auth가 채워짐
 async function signInFirebase(accessToken) {
   try {
-    if (typeof firebase === 'undefined') { showAuthToast('🔴 Firebase SDK 없음', false); return; }
+    if (typeof firebase === 'undefined') { showAuthToast('🔴 Firebase SDK 없음'); return; }
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     const res = await fetch('/api/firebase-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessToken }),
     });
-    if (!res.ok) { showAuthToast(`🔴 Firebase 토큰 발급 실패 (${res.status})`, false); return; }
+    if (!res.ok) { showAuthToast(`🔴 Firebase 토큰 발급 실패 (${res.status})`); return; }
     const { token } = await res.json();
-    if (!token) { showAuthToast('🔴 Firebase 토큰 없음', false); return; }
+    if (!token) { showAuthToast('🔴 Firebase 토큰 없음'); return; }
     await firebase.auth().signInWithCustomToken(token);
-    showAuthToast('🟢 Firebase 로그인 성공', true);
   } catch (e) {
-    showAuthToast(`🔴 Firebase 로그인 오류: ${e?.message || e}`, false);
+    showAuthToast(`🔴 Firebase 로그인 오류: ${e?.message || e}`);
   }
 }
 
