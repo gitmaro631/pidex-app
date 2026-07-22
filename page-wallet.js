@@ -540,12 +540,21 @@ function renderEmptyState(container, wallets) {
       <div class="card" style="text-align:center;padding:32px 16px;">
         <p style="color:var(--text-dim);margin-bottom:4px;">${t('wallet_no_wallets')}</p>
         <p style="font-size:11px;color:var(--text-dim);margin-bottom:20px;">${t('wallet_max_hint').replace('{n}', PIDEX_WALLET_MAX)}</p>
-        <button class="btn-primary" id="btn-add-first" style="width:auto;padding:0 24px;">${t('wallet_add')}</button>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn-primary" id="btn-add-first" style="width:auto;padding:0 24px;">${t('wallet_add')}</button>
+          <button class="btn-outline" id="btn-backup-first" style="width:auto;padding:0 20px;">☁️ ${t('backup_title')}</button>
+        </div>
       </div>
     </div>
   `;
   container.querySelector('#btn-add-first').addEventListener('click', () => {
     showAddDialog(wallets, () => rerenderPage('wallet'));
+  });
+  container.querySelector('#btn-backup-first').addEventListener('click', () => {
+    openBackupModal('testnet', wallets, PIDEX_WALLET_MAX, async (newList) => {
+      await saveWalletsServer(getUsername(), newList);
+      rerenderPage('wallet');
+    });
   });
 }
 
